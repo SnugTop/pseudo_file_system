@@ -1,4 +1,4 @@
-//
+//simple_union.c
 /**
  * @file union.c
  * @brief Demonstrates simple usage of union in C.

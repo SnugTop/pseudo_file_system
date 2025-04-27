@@ -1,4 +1,4 @@
-//
+//simple_read_struct.c
 /**
  * @file union.c
  * @brief Demonstrates simple usage of union in C.
