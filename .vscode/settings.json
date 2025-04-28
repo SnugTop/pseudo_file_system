@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "disk.h": "c",
+        "inode.h": "c"
+    }
+}

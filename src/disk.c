@@ -16,6 +16,9 @@
 void *disk_base = NULL;
 
 int pdos_mkdisk(void) {
+    // Always unlink any previous leftover
+    shm_unlink(DISK_NAME);
+
     int fd = shm_open(DISK_NAME, O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
         perror("shm_open failed");
@@ -35,10 +38,9 @@ int pdos_mkdisk(void) {
         return -1;
     }
 
-    close(fd); 
+    close(fd);
     return 0;
 }
-
 int block_read(int block_number, void *buffer) {
     if (block_number < 0 || block_number >= TOTAL_BLOCKS) {
         fprintf(stderr, "Invalid block number in read: %d\n", block_number);
