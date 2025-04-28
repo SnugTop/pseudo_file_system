@@ -3,12 +3,13 @@
 
 #define MAX_NAME_LENGTH 12
 
-typedef struct direntry {
+typedef struct {
     char d_name[MAX_NAME_LENGTH];  // File or directory name
     unsigned short d_ino;          // Inode number
     short d_off;                   // Offset to next entry (optional)
     unsigned short d_reclen;       // Not really used
     unsigned char d_type;          // 1 = directory, 2 = file
+    //bool char d_type;            // 0 = directory, 1 = file
 } DIR_ENTRY;
 
 #define MAX_DIR_ENTRIES (1024 / sizeof(DIR_ENTRY))
