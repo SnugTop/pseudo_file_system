@@ -16,7 +16,7 @@ typedef struct {
 //since 1024 size of DIR_BLOCK total; size(int) used for num_director_entries
 
 //data block
-typedef struct DIR_BLOCK {
+typedef struct {
     int num_director_entries;              // Number of entries used
     DIR_ENTRY director_entries[MAX_DIR_ENTRIES]; // Directory entries
 } DIR_BLOCK;
