@@ -18,6 +18,7 @@ int dir_lookup(const char *filename) {
     // Search through the directory entries
     for (int i = 0; i < dir_block.num_director_entries; ++i) {
         // If filename matches, return associated inode number
+
         if (strcmp(dir_block.director_entries[i].d_name, filename) == 0) {
             return dir_block.director_entries[i].d_ino;
         }
@@ -46,7 +47,6 @@ int dir_add(const char *filename, int inode_number, int type) {
     if (dir_block.num_director_entries >= MAX_DIR_ENTRIES) {
         return -1; // No space left in directory
     }
-
     // Get pointer to next free directory entry
     DIR_ENTRY *new_entry = &dir_block.director_entries[dir_block.num_director_entries];
 
@@ -78,6 +78,7 @@ char **pdos_dir(void) {
     // Read the root directory block (fixed at block 67)
     block_read(67, &dir_block);
 
+    //creates enough space for each element of directory
     int num_files = dir_block.num_director_entries;
 
     // Allocate an array of char* pointers, one per file + 1 for NULL at end

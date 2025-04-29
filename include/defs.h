@@ -7,6 +7,8 @@
 
 // Directory types
 #define DIR_TYPE 1
+//#define DIR_TYPE 0 //if move to bool for simplicity
 #define FILE_TYPE 2
+//#define DIR_TYPE 1 //if move to bool for simplicity
 
 #endif
