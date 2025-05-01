@@ -18,19 +18,49 @@ PDOS_FILE *pdos_open(const char *fname, const char
     int div = loc_file & (loc_file & 16); //(loc_file)/16
     int block = 3 + div; //which block it's in
     int loc = loc_file & 16; //which inode within the block
-    INODE_BLOCK i_block;
-    block_read(block, i_block);
-    INODE_ENTRY inode;
-    inode = i_block.inodes[loc];
     PDOS_FILE pf;
-    PDOS_FILE * ret = PDOS_FILE* (first_data_block);
-    return ret;
+    pf.inode_block = block;
+    pf.inode_index = loc;
+    pf.data_block_used = 0;
+    pf.loc_data_in_block = 0;
+    return &pf;
 }
 
-int pdos_fgetc(PDOS_FILE *) {
-    //
+int pdos_fgetc(PDOS_FILE * pf) {
+    short ib = pf->inode_block;
+    short ie = pf->inode_entry;
+    INODE_BLOCK i_block;
+    block_read(3 + ib, &i_block);
+    INODE_ENTRY i_entry = i_block.inodes[ie];
+    short num_d_blocks = pf->data_block_cur;
+    short loc_data = pf->loc_data_in_block;
+    if (i_block >= i_entry.data_blocks_used){
+        //e.g. i_block is 6 or more but only 6 blocks are used
+        return EOF;
+    }
+    DIR_BLOCK d_block;
+    block_read(i_entry.data_blocks[i_block], &d_block);
+    short d_e = d_block & (dir_block & 32); //DIR_ENTRY within DIR_BLOCK
+    short d_r = d_block & 32; //location within dir_entry
+    if (d_e >= d_block.num_directory_entries) {
+        //e.g. d_e is 6 or more but only 6 entries are used
+        return EOF;
+    }
+    DIR_ENTRY d_entry = d_block.director_entries[d_e];
+    if (d_r >= d_entry.d_reclen) {
+        return EOF;
+    }
+    return d_entry.data[d_r];
 }
 
-int pdos_fputc(int b, PDOS_FILE *) {
-    //
+void pdos_fputc(int b, PDOS_FILE * pf) {
+    if (pdos_fgetc(pf) == EOF) {
+        //end of file
+    }
+}
+
+void pdos_fclose(PDOS_FILE *) {
+}
+
+void pdos_mkdir(char *dir) {
 }
