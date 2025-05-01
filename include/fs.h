@@ -12,7 +12,7 @@
 
 typedef struct {
     short inode;                    //corresponding inode -- 16*block + loc, loc being inode index in block
-    short data_block_used = 0;      //which data block is being used
+    short data_block_cur = 0;       //which data block is the pointer on
     short loc_data_in_block = 0;    //where I am within that data block
     char* buffer;                   //unspecified size
 } PDOS_FILE;
