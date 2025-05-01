@@ -11,11 +11,11 @@ typedef struct {
     unsigned char d_type;          // 1 = directory, 2 = file -- size 1 byte
 } DIR_MAP;
 
-#define MAX_DIR_ENTRIES 1024
+#define MAX_DATA_ENTRIES 1024
 
 //data block
 typedef struct {
-    DIR_ENTRY director_entries[MAX_DIR_ENTRIES]; // Directory entries
+    char data [MAX_DATA_ENTRIES]; // Directory entries
 } DIR_BLOCK;
 
 // Function prototypes
