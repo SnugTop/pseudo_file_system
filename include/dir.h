@@ -7,7 +7,7 @@ typedef struct {
     char d_name[MAX_NAME_LENGTH];  // File or directory name -- size 12 bytes
     unsigned short d_ino;          // Inode number -- size 2 bytes
     short d_off = 0;                   // Offset to next entry (optional) -- size 2 bytes
-    unsigned short d_reclen;       // Not really used -- size 2 bytes
+    unsigned short d_reclen;         // Size of data -- size 2 bytes
     unsigned char d_type;          // 1 = directory, 2 = file -- size 1 byte
     //bool char d_type;            // 0 = directory, 1 = file
     //total size of 51, allocate 32 bytes to file info
