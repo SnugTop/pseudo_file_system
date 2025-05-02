@@ -19,86 +19,59 @@ PDOS_FILE *pdos_open(const char *fname, const char
     int block = 3 + div; //which block it's in
     int loc = loc_file & 15; //which inode within the block
     PDOS_FILE pf;
-    pf.inode_block = block;
+    pf.inode_block = block; //starting at 3 to account for prior blocks
     pf.inode_index = loc;
-    pf.data_block_used = 0;
+    pf.data_block_cur= 0;
     pf.loc_data_in_block = 0;
     return &pf;
 }
 
 int pdos_fgetc(PDOS_FILE * pf) {
-    short ib = pf->inode_block;
-    short ie = pf->inode_entry; 
+    unsigned short ib = pf->inode_block;
+    unsigned short ie = pf->inode_index; 
     INODE_BLOCK i_block;
-    block_read(3 + ib, &i_block);
-    INODE_ENTRY i_entry = i_block.inodes[ie];
-    short num_d_blocks = pf->data_block_cur;
-    short loc_data = pf->loc_data_in_block; //can be at maximum 32*20 = 640
-    if (i_block == i_entry.data_blocks_used){
-        //e.g. i_block is 6 but only 6 blocks are used
+    block_read(ib, &i_block);
+    INODE_ENTRY* i_entry = &i_block.inodes[ie];
+    if (i_entry->size <= pf->data_block_cur*1024 + pf->loc_data_in_block) {
+        //if loc_data_in_block is 500, then if there are 500 in block or fewer, top index will be 499 -- i.entry.size > 500
+        //thus <= (i_entry.size and data_block_cur*1024 account for what's in prior blocks)
         return EOF;
     }
-    DIR_BLOCK d_block;
-    block_read(i_entry.data_blocks[i_block], &d_block);
-    short d_e = loc_data >>> 5; //DIR_ENTRY within DIR_BLOCK
-    short d_r = loc_data & 12; //location within dir_entry
-    if (d_e == d_block.num_directory_entries) {
-        //e.g. d_e is 6 but only 6 entries are used
-        return EOF;
-    }
-    DIR_ENTRY d_entry = d_block.director_entries[d_e];
-    if (d_r == d_entry.d_reclen) {
-        return EOF;
-    }
-    //update PDOS_FILE*
-    //32*20 = 640 bytes of data within each d_block
-    pf->loc_data_in_block++;
-    if (pf->loc_data_in_block == 640) {
+    DATA_BLOCK d_block;
+    block_read(67 + pf->data_block_cur, &d_block);
+    //incrementation
+    pf->loc_data_in_block = pf->loc_data_in_block + 1;
+    if (pf->loc_data_in_block == 1024) {
+        //going to next block
         pf->loc_data_in_block = 0;
-        //requires the allocation of a new data block
-        pf->data_block_cur++; //moving onto new data block
+        pf->data_block_cur = pf->data_block_cur + 1;
     }
-    return d_entry.data[d_r];
+    return d_block.data[pf->loc_data_in_block];
 }
 
 void pdos_fputc(int b, PDOS_FILE * pf) {
-    pf->buffer = new char [4]; //an int is four bytes
-    unsigned short temp; //placeholder for each char
-    pf->buffer[0] = b & 255; //b % 256
-    b = b >> 8;
-    short ib = pf->inode_block;
-    short ie = pf->inode_entry; 
-    bool add_new_bytes = false;
+    char c = (short) b; //idk why it entered as an int
+    unsigned short ib = pf->inode_block;
+    unsigned short ie = pf->inode_index; 
     INODE_BLOCK i_block;
-    block_read(3 + ib, &i_block);
+    block_read(ib, &i_block);
     INODE_ENTRY i_entry = i_block.inodes[ie];
-    short num_d_blocks = pf->data_block_cur;
-    short loc_data = pf->loc_data_in_block; //can be at maximum 32*20 = 640
-    if (i_block == i_entry.data_blocks_used){
-        //e.g. i_block is 6 but only 6 blocks are used
-        add_new_bytes = true;
+    DATA_BLOCK d_block;
+    block_read(67 + pf->data_block_cur, &d_block);
+    if (i_entry.size < pf->data_block_cur*1024 + pf->loc_data_in_block) {
+        //beyond end of file
+        //do nothing
     }
-    DIR_BLOCK d_block;
-    block_read(i_entry.data_blocks[i_block], &d_block);
-    short d_e = loc_data & (loc_data & 32); //DIR_ENTRY within DIR_BLOCK
-    short d_r = loc_data & 32; //location within dir_entry
-    if (!add_new_bytes && d_e == d_block.num_directory_entries) {
-        //e.g. d_e is 6 but only 6 entries are used
-        add_new_bytes = true;
-    }
-    DIR_ENTRY d_entry = d_block.director_entries[d_e];
-    if (!add_new_bytes && d_r == d_entry.d_reclen) {
-        add_new_bytes = true;
-    }
-    //update PDOS_FILE*
-    //32*20 = 640 bytes of data within each d_block
-    if (add_new_bytes) {
-    }
-    pf->loc_data_in_block++;
-    if (pf->loc_data_in_block == 640) {
-        pf->loc_data_in_block = 0;
-        pf->data_block_cur++; //moving onto new data block
-    }
+    else if (i_entry.size == pf->data_block_cur*1024 + pf->loc_data_in_block) {
+        i_block.inodes[ie].size = i_block.inodes[ie].size + 1; //increase size
+    } //else do not increase size
+    d_block.data[pf->loc_data_in_block] = c;
+    //incrementation
+    pf->loc_data_in_block = pf->loc_data_in_block + 1;
+    if (pf->loc_data_in_block == 1024) {
+    //going to next block
+    pf->loc_data_in_block = 0;
+    pf->data_block_cur = pf->data_block_cur + 1;
 }
 
 void pdos_fclose(PDOS_FILE *) {
