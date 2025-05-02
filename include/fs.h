@@ -11,10 +11,10 @@
 //I have no clue if this is your plan for the file structure, but as opposed to a directory...
 
 typedef struct {
-    short inode_block;              //corresponding inode -- 16*block + loc, loc being inode index in block
-    short inode_index;
-    short data_block_cur = 0;       //which data block is the pointer on
-    short loc_data_in_block = 0;    //where I am within that data block
+    unsigned short inode_block;              //corresponding inode -- 16*block + loc, loc being inode index in block
+    unsigned short inode_index;
+    unsigned short data_block_cur;       //which data block is the pointer on
+    unsigned short loc_data_in_block;    //where I am within that data block
     char* buffer;                   //unspecified size
     bool modeW;                     //write
     bool modeX;                     //execute
