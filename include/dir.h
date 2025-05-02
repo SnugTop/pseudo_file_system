@@ -8,14 +8,19 @@ typedef struct {
     unsigned short d_ino;          // Inode number -- size 2 bytes
     short d_off = 0;                   // Offset to next entry (optional) -- size 2 bytes
     unsigned short d_reclen;         // Size of data -- size 2 bytes
-    unsigned char d_type;          // 1 = directory, 2 = file -- size 1 byte
-} DIR_MAP;
+    unsigned char d_type;          // 1 = directory, 2 = file -- size 2 bytes
+} DIR_ENTRY;
 
 #define MAX_DATA_ENTRIES 1024
 
 //data block
 typedef struct {
     char data [MAX_DATA_ENTRIES]; // Directory entries
+} DATA_BLOCK;
+
+typedef struct {
+    int dir_entries; //size 4 bytes
+    DIR_ENTRY dir_entries [51]; //1024 minus 4 divided by 20 is 51
 } DIR_BLOCK;
 
 // Function prototypes
