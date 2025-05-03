@@ -126,6 +126,8 @@ void pdos_fclose(PDOS_FILE * pf) {
             }
             d_b[curDataIndex] = buffer[count]; //replace whatever byte is in there
         }  
+        //not deallocating memory, just removing the pointer
+        pf = NULL;
     }
 }
 
