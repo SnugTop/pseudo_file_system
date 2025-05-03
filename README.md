@@ -75,4 +75,4 @@ Supported Operations:
 
 * pdos_fputc()/pdos_fgetc() – Write/read data to/from a file.
 
-*pdos_fclose() – Finalize writing, flush buffers, and update inode.
+* pdos_fclose() – Finalize writing, flush buffers, and update inode.
