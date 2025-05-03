@@ -11,16 +11,17 @@
  */
 int dir_lookup(const char *filename) {
     DIR_BLOCK dir_block;
+    unsigned short cur_block = 67;
 
-    // Read the root directory block (fixed at block 67)
-    block_read(67, &dir_block);
-
-    // Search through the directory entries
-    for (int i = 0; i < dir_block.num_director_entries; ++i) {
-        // If filename matches, return associated inode number
-
-        if (strcmp(dir_block.director_entries[i].d_name, filename) == 0) {
-            return dir_block.director_entries[i].d_ino;
+    //looks at each directory entry in turn in each block
+    while (cur_block < 1091) {
+        block_read(cur_block, &dir_block); // initially 67 = first data block for root dir
+        for (int i = 0; i < dir_block.num_director_entries; ++i) {
+            // If filename matches, return associated inode number
+            //compares name attribute for each entry to filename
+            if (strcmp(dir_block.director_entries[i].d_name, filename) == 0) {
+                return dir_block.director_entries[i].d_ino; // Return inode number
+            }
         }
     }
 
@@ -39,13 +40,17 @@ int dir_lookup(const char *filename) {
  */
 int dir_add(const char *filename, int inode_number, int type) {
     DIR_BLOCK dir_block;
-
+    unsigned short cur_block = 67;
     // Read the root directory block (fixed at block 67)
-    block_read(67, &dir_block);
+    block_read(cur_block, &dir_block);
 
     // Check if directory is already full
     if (dir_block.num_director_entries >= MAX_DIR_ENTRIES) {
-        return -1; // No space left in directory
+        cur_block++;
+        block_read(cur_block, &dir_block);
+        if (cur_block == 1091) {
+            return -1; // Directory full
+        }
     }
     // Get pointer to next free directory entry
     DIR_ENTRY *new_entry = &dir_block.director_entries[dir_block.num_director_entries];
@@ -60,10 +65,10 @@ int dir_add(const char *filename, int inode_number, int type) {
     // Increase the number of directory entries
     dir_block.num_director_entries++;
 
-    // Write updated directory block back to disk
-    block_write(67, &dir_block);
 
-    return 0; // Success
+    block_write(cur_block, &dir_block);
+    return 0;
+
 }
 
 /*
@@ -75,18 +80,29 @@ int dir_add(const char *filename, int inode_number, int type) {
 char **pdos_dir(void) {
     DIR_BLOCK dir_block;
 
-    // Read the root directory block (fixed at block 67)
-    block_read(67, &dir_block);
+    unsigned short u_s = data_blocks_used; //for different blocks
+
+    int tot_size = 0; //total number of elements across blocks
+    for (short count = 0; count < u_s; count++) {
+        block_read(67+count, &dir_block);
+        
+        //creates enough space for each element of directory
+        int num_files = dir_block.num_director_entries;
+        tot_size += num_files;
+    }
 
     //creates enough space for each element of directory
-    int num_files = dir_block.num_director_entries;
+    char **list = malloc(sizeof(char *) * (tot_size + 1)); // +1 for NULL at end
 
-    // Allocate an array of char* pointers, one per file + 1 for NULL at end
-    char **list = malloc(sizeof(char *) * (num_files + 1));
+    //lists the name of each in turn
+    int cur_index = 0;
+    for (int i = 0; i < data_blocks_used; i++) {
+        block_read(67, &dir_block);
+        for (int j = 0; j < dir_block.num_director_entries; j++) {
+            list[cur_index] = strdup(dir_block.director_entries[i].d_name);
+        }
+        cur_index++;
 
-    // Copy each filename into the list
-    for (int i = 0; i < num_files; ++i) {
-        list[i] = strdup(dir_block.director_entries[i].d_name); // strdup allocates new memory for each name
     }
 
     // Null-terminate the list
