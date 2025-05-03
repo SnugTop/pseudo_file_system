@@ -13,6 +13,15 @@ PDOS_FILE *pdos_open(const char *fname, const char
         //looks for first free inode
         loc_file = inode_allocate(void);
     }
+
+    //allocate data blocks and stuff for new Inode
+    INODE_ENTRY i_e;
+    inode_read(loc_file, &i_e);
+    i_e.data_blocks_used = 0;
+    i_e.size = 0;
+    for (int count = 0; count < 15; count++) {
+        i_e.data_blocks[count] = 15*loc_file + count; //presuming that loc_file starts at 0
+    }
     
     //if file already exists then loc_file == inode number
     dir_add(filename, loc_file, FILE_TYPE); //new file added in
@@ -76,6 +85,8 @@ void pdos_fputc(int b, PDOS_FILE * pf) {
         INODE_BLOCK i_block;
         block_read(ib, &i_block);
         INODE_ENTRY i_entry = i_block.inodes[ie];
+
+        INODE_ENTRY i_e;
         
         DATA_BLOCK d_block;
         block_read(67 + pf->data_block_cur, &d_block);
@@ -139,10 +150,16 @@ void pdos_mkdir(char *dir) {
     int div = loc_file >>> 4; //(loc_file)/16
     int block = 3 + div; //which block it's in
     int loc = loc_file & 15; //which inode within the block
-    INODE_BLOCK i_block;
-    block_read(block, &i_block);
+    
     INODE_ENTRY i_entry;
-    i_entry = &i_block.inodes[loc];
+    
+    //setting values for new inode entry
+    inode_read(loc_file, &i_entry);
+    i_entry->size = 2;
+    for (int count = 0; count < 15; count++) {
+        i_e.data_blocks[count] = 15*loc_file + count; //presuming that loc_file starts at 0
+    }
+    
     DIR_BLOCK d_b;
     
     block_read(i_entry.data_blocks[0], &d_b);
