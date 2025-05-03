@@ -11,11 +11,11 @@ typedef struct {
     unsigned char d_type;          // 1 = directory, 2 = file -- size 2 bytes
 } DIR_ENTRY;
 
-#define MAX_DATA_ENTRIES 1024
+#define MAX_DIR_ENTRIES 1024
 
 //data block
 typedef struct {
-    char data [MAX_DATA_ENTRIES]; // Directory entries
+    char data [MAX_DIR_ENTRIES]; // Directory entries
 } DATA_BLOCK;
 
 typedef struct {
