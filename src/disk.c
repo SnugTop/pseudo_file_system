@@ -1,4 +1,3 @@
-// disk.c
 #include "defs.h"
 #include "disk.h"
 #include "inode.h"
@@ -55,10 +54,6 @@ int pdos_mkdisk(void) {
 /*
  * block_read:
  * Reads a 1024-byte block from the pseudo-disk into a buffer.
- * Parameters:
- * - block_number: which block to read (0 to 1090)
- * - buffer: where to store the data
- * Returns 0 on success, -1 on invalid block number.
  */
 int block_read(int block_number, void *buffer) {
     if (block_number < 0 || block_number >= TOTAL_BLOCKS) {
@@ -73,10 +68,6 @@ int block_read(int block_number, void *buffer) {
 /*
  * block_write:
  * Writes a 1024-byte buffer into a specific block on the pseudo-disk.
- * Parameters:
- * - block_number: which block to write (0 to 1090)
- * - buffer: data to write
- * Returns 0 on success, -1 on invalid block number.
  */
 int block_write(int block_number, const void *buffer) {
     if (block_number < 0 || block_number >= TOTAL_BLOCKS) {
@@ -89,55 +80,71 @@ int block_write(int block_number, const void *buffer) {
 }
 
 /*
+ * data_block_allocate:
+ * Finds the first available data block and marks it as used.
+ * Returns the block number (relative to data blocks) or -1 if none available.
+ */
+int data_block_allocate(void) {
+    unsigned short bitmap[BLOCK_SIZE / 2]; // 512 words (1024 bytes)
+    block_read(2, bitmap); // Read the data bitmap (Block 2)
+
+    for (int word = 0; word < 512; ++word) {
+        if (bitmap[word] != 0xFFFF) {
+            for (int bit = 0; bit < 16; ++bit) {
+                if ((bitmap[word] & (1 << bit)) == 0) {
+                    bitmap[word] |= (1 << bit);
+                    block_write(2, bitmap);
+                    return (word * 16) + bit;
+                }
+            }
+        }
+    }
+
+    return -1; // No free blocks
+}
+
+/*
  * pdos_mkfs:
  * Formats the disk to create a new, empty file system.
- * Writes the superblock, inode bitmap, data bitmap, root directory inode, and root directory block.
- * Parameter:
- * - id: Identifying string to store in superblock.
- * Returns 0 on success.
  */
 int pdos_mkfs(char *id) {
-    // Step 1: Create the superblock (Block 0)
+    // Step 1: Superblock
     char superblock[BLOCK_SIZE];
     memset(superblock, 0, sizeof(superblock));
     strncpy(superblock, id, BLOCK_SIZE);
     block_write(0, superblock);
 
-    // Step 2: Create and initialize the inode bitmap (Block 1)
+    // Step 2: Inode bitmap
     unsigned short inode_bitmap[BLOCK_SIZE / 2] = {0}; 
     inode_bitmap[0] = 0x0001; // Mark inode 0 (root directory) as used
     block_write(1, inode_bitmap);
 
-    // Step 3: Create and initialize the data bitmap (Block 2)
+    // Step 3: Data bitmap
     unsigned short data_bitmap[BLOCK_SIZE / 2] = {0};
-    data_bitmap[0] = 0x0001; // Mark data block 0 (root dir block) as used
+    data_bitmap[0] = 0x0001; // Mark data block 0 (used by root dir)
     block_write(2, data_bitmap);
 
-    // Step 4: Create inode 0 (for root directory)
+    // Step 4: Root inode
     INODE_BLOCK inode_block;
     memset(&inode_block, 0, sizeof(INODE_BLOCK));
-
-    inode_block.inodes[0].size = 2 * sizeof(DIR_ENTRY); // Two entries: "." and ".."
-    inode_block.inodes[0].file_mod_time = time(NULL);   // Set modification time
-    inode_block.inodes[0].data_blocks_used = 1;         // Root directory uses 1 data block
-    inode_block.inodes[0].data_blocks[0] = 0;           // Points to block 0 (data block)
-
+    inode_block.inodes[0].size = 2 * sizeof(DIR_ENTRY);
+    inode_block.inodes[0].file_mod_time = time(NULL);
+    inode_block.inodes[0].data_blocks_used = 1;
+    inode_block.inodes[0].data_blocks[0] = 0;
     block_write(3, &inode_block);
 
-    // Step 5: Create the root directory block (stored at block 67)
+    // Step 5: Root directory entries
     DIR_BLOCK root_dir;
     memset(&root_dir, 0, sizeof(DIR_BLOCK));
-    root_dir.num_director_entries = 2; // . and ..
+    root_dir.num_dir_entries = 2;
 
-    // Entry for "."
-    strcpy(root_dir.director_entries[0].d_name, ".");
-    root_dir.director_entries[0].d_ino = 0;
-    root_dir.director_entries[0].d_type = DIR_TYPE;
+    strcpy(root_dir.dir_entries[0].d_name, ".");
+    root_dir.dir_entries[0].d_ino = 0;
+    root_dir.dir_entries[0].d_type = DIR_TYPE;
 
-    // Entry for ".."
-    strcpy(root_dir.director_entries[1].d_name, "..");
-    root_dir.director_entries[1].d_ino = 0;
-    root_dir.director_entries[1].d_type = DIR_TYPE;
+    strcpy(root_dir.dir_entries[1].d_name, "..");
+    root_dir.dir_entries[1].d_ino = 0;
+    root_dir.dir_entries[1].d_type = DIR_TYPE;
 
     block_write(67, &root_dir);
 

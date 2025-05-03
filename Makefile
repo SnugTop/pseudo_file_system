@@ -28,8 +28,9 @@ $(TEST_DIR)/test_mkdisk: $(TEST_DIR)/test_mkdisk.c $(SRC_DIR)/disk.c
 $(TEST_DIR)/test_inode: $(TEST_DIR)/test_inode.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
 
-$(TEST_DIR)/test_dir: $(TEST_DIR)/test_dir.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c
+$(TEST_DIR)/test_dir: $(TEST_DIR)/test_dir.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+
 
 # Clean everything
 clean:
