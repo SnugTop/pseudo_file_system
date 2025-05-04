@@ -21,7 +21,7 @@ int write1_funcC() {
 
 //part (g) for writing to file2
 int write1_funcC() {
-  PDOS_FILE * pf2 = pdos_open("file2.txt", "w"); //creates file
+  PDOS_FILE * pf2 = pdos_open("file2.txt", "rw"); //creates file
 
   //skips through already-written bytes
   for (int count = 0; count < 1023; count++) { //fills in each in turn
