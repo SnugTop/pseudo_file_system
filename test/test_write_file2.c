@@ -19,7 +19,7 @@ int write1_funcC() {
   return 0;
 }
 
-//part (f) for writing to file2
+//part (g) for writing to file2
 int write1_funcC() {
   PDOS_FILE * pf2 = pdos_open("file2.txt", "w"); //creates file
 
