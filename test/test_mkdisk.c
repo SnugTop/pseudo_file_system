@@ -18,16 +18,22 @@ int main() {
     }
 
     //parts c through h of the assignment code to write:
+    printf("/n short program C/n");
     write1_funcC(); //c
+    printf("/n short program D/n");
     read1_funcD(); //d 
+    printf("/n short program E/n");
     write2_funcC(); //e--repeat c
     read2_funcD(); //e--repeat d
+    printf("/n short program F/n");
     write1_funcF(); //f--write
     read1_funcF(); //f--read 1
     read2_funcD(); //f--read 2
+    printf("/n short program G/n");
     write2_funcF(); //g--write
     read1_funcF(); //g--read 1
     read2_funcF(); //g--read 2
+    printf("/n short program H/n");
     print_files("file1.txt"); //h--file 1
     print_files("file2.txt"); //h--file 2
     
