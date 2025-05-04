@@ -24,6 +24,7 @@ int read2_funcD() {
     printf("/n incorrect on number 1024"); 
   }
   pdos_fclose(pf1);
+  return 0;
 }
 
 //part (g) in terms of outputting file2.txt
@@ -55,4 +56,5 @@ int read2_funcF() {
     printf("/n incorrect on number 2048");
   }
   pdos_fclose(pf2);
+  return 0;
 }
