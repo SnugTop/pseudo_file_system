@@ -14,7 +14,7 @@ int read1_funcD() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
     int c = pdos_fgetc(pf1);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1);
+      printf("/n incorrect on number %d/n", count+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
@@ -22,7 +22,7 @@ int read1_funcD() {
   
   char c = char(pdos_fgetc(pf1));
   if (c != EOF) {
-    printf("/n incorrect on number 1024"); //for last EOF at end
+    printf("/n incorrect on number 1024/n"); //for last EOF at end
   }
   pdos_fclose(pf1); //close pointer
   return 0;
@@ -38,7 +38,7 @@ int read1_funcF() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
     int c = pdos_fgetc(pf2);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1);
+      printf("/n incorrect on number %d/n", count+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
@@ -48,14 +48,14 @@ int read1_funcF() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
     int c = pdos_fgetc(pf2);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1023+1);
+      printf("/n incorrect on number %d/n", count+1023+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
   }
   char c = char(pdos_fgetc(pf2));
   if (c != EOF) {
-    printf("/n incorrect on number 2048");
+    printf("/n incorrect on number 2048/n");
   }
   pdos_fclose(pf2);
   return 0;
