@@ -26,7 +26,7 @@ int write1_funcC() {
   //skips through already-written bytes
   for (int count = 0; count < 1023; count++) { //fills in each in turn
     //a char but input as an int
-    pdos_getc(c, pf2);
+    pdos_getc(pf2);
   }
 
   //newly-written bytes
