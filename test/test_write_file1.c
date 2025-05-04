@@ -20,7 +20,7 @@ int write1_funcC() {
 }
 
 //part (f) for writing to file1
-int write1_funcC() {
+int write1_funcF() {
   PDOS_FILE * pf2 = pdos_open("file1.txt", "rw"); //creates file -- rw to enable both get and put
 
   //skips through already-written bytes
