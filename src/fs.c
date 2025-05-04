@@ -19,9 +19,7 @@ PDOS_FILE *pdos_open(const char *fname, const char
     inode_read(loc_file, &i_e);
     i_e.data_blocks_used = 0;
     i_e.size = 0;
-    for (int count = 0; count < 15; count++) {
-        i_e.data_blocks[count] = 15*loc_file + count; //presuming that loc_file starts at 0
-    }
+    //as of now, i_e.data_blocks will remain un-initialized
     
     //if file already exists then loc_file == inode number
     dir_add(filename, loc_file, FILE_TYPE); //new file added in
@@ -85,8 +83,6 @@ void pdos_fputc(int b, PDOS_FILE * pf) {
         INODE_BLOCK i_block;
         block_read(ib, &i_block);
         INODE_ENTRY i_entry = i_block.inodes[ie];
-
-        INODE_ENTRY i_e;
         
         DATA_BLOCK d_block;
         block_read(67 + pf->data_block_cur, &d_block);
@@ -96,9 +92,25 @@ void pdos_fputc(int b, PDOS_FILE * pf) {
         }
             
         else if (i_entry.size == pf->data_block_cur*1024 + pf->loc_data_in_block) {
-            i_block.inodes[ie].size = i_block.inodes[ie].size + 1; //increase size
+            i_entry.size = i_entry.size + 1; //increase size
             if (i_block.inodes[ie].size && 1023 == 1) { //%1024
-                i_block.inodes[ie].data_blocks_used++; //increment
+                //now we search for new data block
+                int cur_look = 0; //index of place looking for new data blok
+                bool empty_data_block_found = false;
+                DATA_BLOCK d_b_block; //actually data block bitmap at index 2
+                block_read(2, &d_b_block);
+                while (empty_data_block_found == false) {
+                    if (cur_look == 1024) {
+                        perror("NO MORE ROOM!/n"); //no free data blocks
+                        return 1;
+                    }
+                    if (d_b_block[cur_look] == 0) {
+                        empty_data_block_found = true;
+                        i_entry.data_blocks[data_blocks_used] = cur_look; //new data block added to list
+                        d_b_block[cur_look] = 1; //data block now used
+                    }
+                }
+                i_entry.data_blocks_used++; //increment
                 //this means that it's gone over to a new data block
             }
         } //else do not increase size
@@ -156,9 +168,6 @@ void pdos_mkdir(char *dir) {
     //setting values for new inode entry
     inode_read(loc_file, &i_entry);
     i_entry->size = 2;
-    for (int count = 0; count < 15; count++) {
-        i_e.data_blocks[count] = 15*loc_file + count; //presuming that loc_file starts at 0
-    }
     
     DIR_BLOCK d_b;
     
@@ -166,6 +175,27 @@ void pdos_mkdir(char *dir) {
     i_entry->data_blocks_used = 1;
     memset(&root_dir, 0, sizeof(DIR_BLOCK));
     root_dir.num_director_entries = 2;
+
+    if (i_block.inodes[ie].size && 1023 == 1) { //%1024
+        //now we search for new data block
+        int cur_look = 0; //index of place looking for new data blok
+        bool empty_data_block_found = false;
+        DATA_BLOCK d_b_block; //actually data block bitmap at index 2
+        block_read(2, &d_b_block);
+        while (empty_data_block_found == false) {
+            if (cur_look == 1024) {
+                perror("NO MORE ROOM!/n"); //no free data blocks
+                return 1;
+            }
+            if (d_b_block[cur_look] == 0) {
+                empty_data_block_found = true;
+                i_entry.data_blocks[data_blocks_used] = cur_look; //new data block added to list
+                d_b_block[cur_look] = 1; //data block now used
+            }
+        }
+        i_entry.data_blocks_used++; //increment
+        //this means that it's gone over to a new data block
+    }
 
     strcpy(root_dir.director_entries[0].d_name, ".");
     root_dir.director_entries[0].d_ino = loc_file;
