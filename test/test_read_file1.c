@@ -12,7 +12,7 @@ int read1_funcD() {
   for (int count = 0; count < 1023; count++) { //goes through each in turn
     //a char but input as an int
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-    int c = pdos_fgetc(c, pf1);
+    int c = pdos_fgetc(pf1);
     if (c != c1) {
       printf("/n incorrect on number %d", count+1);
     }
@@ -20,7 +20,7 @@ int read1_funcD() {
     printf("%c", cc); //should output EOF too
   }
   
-  char c = char(pdos_fgetc(c, pf1));
+  char c = char(pdos_fgetc(pf1));
   if (c != EOF) {
     printf("/n incorrect on number 1024"); //for last EOF at end
   }
@@ -36,7 +36,7 @@ int read1_funcF() {
   for (int count = 0; count < 1023; count++) {
     //a char but input as an int
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-    int c = pdos_fgetc(c, pf2);
+    int c = pdos_fgetc(pf2);
     if (c != c1) {
       printf("/n incorrect on number %d", count+1);
     }
@@ -46,14 +46,14 @@ int read1_funcF() {
   for (int count = 0; count < 1024; count++) { //indices 1023 - 2046, inclusive
     //a char but input as an int
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
-    int c = pdos_fgetc(c, pf2);
+    int c = pdos_fgetc(pf2);
     if (c != c1) {
       printf("/n incorrect on number %d", count+1023+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
   }
-  char c = char(pdos_fgetc(c, pf2));
+  char c = char(pdos_fgetc(pf2));
   if (c != EOF) {
     printf("/n incorrect on number 2048");
   }
