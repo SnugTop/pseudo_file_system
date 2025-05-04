@@ -21,4 +21,11 @@ typedef struct {
     bool modeR;                     //read
 } PDOS_FILE;
 
+// Function prototypes
+PDOS_FILE *pdos_open(const char *fname, const char *mode);
+int pdos_fgetc(PDOS_FILE * pf);
+void pdos_fputc(int b, PDOS_FILE * pf);
+void pdos_fclose(PDOS_FILE * pf);
+void pdos_mkdir(char *dir);
+
 #endif
