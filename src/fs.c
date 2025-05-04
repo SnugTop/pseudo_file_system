@@ -186,3 +186,27 @@ void pdos_mkdir(char *dirname) {
 
     block_write(67 + new_block, &root_dir);
 }
+
+int pdos_read(PDOS_FILE *pf, char *buf, size_t len) {
+    if (!pf || !pf->modeR) return -1;
+
+    for (size_t i = 0; i < len; ++i) {
+        int c = pdos_fgetc(pf);
+        if (c == EOF) return i; // Return bytes successfully read
+        buf[i] = (char)c;
+    }
+    return len;
+}
+
+int pdos_write(PDOS_FILE *pf, const char *buf, size_t len) {
+    if (!pf || !pf->modeW) return -1;
+
+    for (size_t i = 0; i < len; ++i) {
+        pdos_fputc(buf[i], pf);
+    }
+    return len;
+}
+
+bool pdos_exists(const char *fname) {
+    return dir_lookup(fname) != -1;
+}

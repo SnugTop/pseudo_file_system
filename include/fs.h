@@ -23,4 +23,8 @@ typedef struct {
     bool modeR;                     //read
 } PDOS_FILE;
 
+int pdos_read(PDOS_FILE *pf, char *buf, size_t len);
+int pdos_write(PDOS_FILE *pf, const char *buf, size_t len);
+bool pdos_exists(const char *fname);
+
 #endif

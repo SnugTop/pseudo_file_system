@@ -1,3 +1,4 @@
+//disk.c
 #include "defs.h"
 #include "disk.h"
 #include "inode.h"
