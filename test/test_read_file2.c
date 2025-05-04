@@ -14,14 +14,14 @@ int read2_funcD() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
     int c = pdos_fgetc(pf1);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1);
+      printf("/n incorrect on number %d/n", count+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
   }
   char c = char(pdos_fgetc(pf1));
   if (c != EOF) {
-    printf("/n incorrect on number 1024"); 
+    printf("/n incorrect on number 1024/n"); 
   }
   pdos_fclose(pf1);
   return 0;
@@ -36,7 +36,7 @@ int read2_funcF() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
     int c = pdos_fgetc(pf2);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1);
+      printf("/n incorrect on number %d/n", count+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
@@ -46,14 +46,14 @@ int read2_funcF() {
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
     int c = pdos_fgetc(pf2);
     if (c != c1) {
-      printf("/n incorrect on number %d", count+1023+1);
+      printf("/n incorrect on number %d/n", count+1023+1);
     }
     char cc = char(c);
     printf("%c", cc); //should output EOF too
   }
   char c = char(pdos_fgetc(pf2));
   if (c != EOF) {
-    printf("/n incorrect on number 2048");
+    printf("/n incorrect on number 2048/n");
   }
   pdos_fclose(pf2);
   return 0;
