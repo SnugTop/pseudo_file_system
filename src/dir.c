@@ -1,3 +1,4 @@
+//dir.c
 #include "dir.h"
 #include "defs.h"
 #include "disk.h"
@@ -13,16 +14,16 @@ int dir_lookup(const char *filename) {
     DIR_BLOCK dir_block;
     unsigned short cur_block = 67;
 
-    //looks at each directory entry in turn in each block
+    // looks at each directory entry in turn in each block
     while (cur_block < 1091) {
         block_read(cur_block, &dir_block); // initially 67 = first data block for root dir
-        for (int i = 0; i < dir_block.num_director_entries; ++i) {
+        for (int i = 0; i < dir_block.num_dir_entries; ++i) {
             // If filename matches, return associated inode number
-            //compares name attribute for each entry to filename
-            if (strcmp(dir_block.director_entries[i].d_name, filename) == 0) {
-                return dir_block.director_entries[i].d_ino; // Return inode number
+            if (strcmp(dir_block.dir_entries[i].d_name, filename) == 0) {
+                return dir_block.dir_entries[i].d_ino; // Return inode number
             }
         }
+        cur_block++;
     }
 
     // File not found
@@ -41,34 +42,29 @@ int dir_lookup(const char *filename) {
 int dir_add(const char *filename, int inode_number, int type) {
     DIR_BLOCK dir_block;
     unsigned short cur_block = 67;
-    // Read the root directory block (fixed at block 67)
-    block_read(cur_block, &dir_block);
 
-    // Check if directory is already full
-    if (dir_block.num_director_entries >= MAX_DIR_ENTRIES) {
-        cur_block++;
+    // Search for a block with space
+    while (cur_block < 1091) {
         block_read(cur_block, &dir_block);
-        if (cur_block == 1091) {
-            return -1; // Directory full
+
+        if (dir_block.num_dir_entries < MAX_DIR_ENTRIES) {
+            DIR_ENTRY *new_entry = &dir_block.dir_entries[dir_block.num_dir_entries];
+
+            strncpy(new_entry->d_name, filename, MAX_NAME_LENGTH);
+            new_entry->d_ino = inode_number;
+            new_entry->d_type = type;
+            new_entry->d_reclen = sizeof(DIR_ENTRY);
+            new_entry->d_off = 0;
+
+            dir_block.num_dir_entries++;
+            block_write(cur_block, &dir_block);
+            return 0;
         }
+
+        cur_block++;
     }
-    // Get pointer to next free directory entry
-    DIR_ENTRY *new_entry = &dir_block.director_entries[dir_block.num_director_entries];
 
-    // Fill in the directory entry fields
-    strncpy(new_entry->d_name, filename, MAX_NAME_LENGTH); // Copy filename
-    new_entry->d_ino = inode_number;    // Set inode number
-    new_entry->d_type = type;            // Set type (1 = directory, 2 = file)
-    new_entry->d_reclen = sizeof(DIR_ENTRY); // (Optional: record length)
-    new_entry->d_off = 0;                // (Optional: not used for now)
-
-    // Increase the number of directory entries
-    dir_block.num_director_entries++;
-
-
-    block_write(cur_block, &dir_block);
-    return 0;
-
+    return -1; // Directory full
 }
 
 /*
@@ -79,34 +75,25 @@ int dir_add(const char *filename, int inode_number, int type) {
  */
 char **pdos_dir(void) {
     DIR_BLOCK dir_block;
+    int total_files = 0;
 
-    unsigned short u_s = data_blocks_used; //for different blocks
-
-    int tot_size = 0; //total number of elements across blocks
-    for (short count = 0; count < u_s; count++) {
-        block_read(67+count, &dir_block);
-        
-        //creates enough space for each element of directory
-        int num_files = dir_block.num_director_entries;
-        tot_size += num_files;
+    // First pass to count total files
+    for (int block = 67; block < 1091; ++block) {
+        block_read(block, &dir_block);
+        total_files += dir_block.num_dir_entries;
     }
 
-    //creates enough space for each element of directory
-    char **list = malloc(sizeof(char *) * (tot_size + 1)); // +1 for NULL at end
+    char **list = malloc(sizeof(char *) * (total_files + 1)); // +1 for NULL terminator
+    if (!list) return NULL;
 
-    //lists the name of each in turn
-    int cur_index = 0;
-    for (int i = 0; i < data_blocks_used; i++) {
-        block_read(67, &dir_block);
-        for (int j = 0; j < dir_block.num_director_entries; j++) {
-            list[cur_index] = strdup(dir_block.director_entries[i].d_name);
+    int index = 0;
+    for (int block = 67; block < 1091; ++block) {
+        block_read(block, &dir_block);
+        for (int i = 0; i < dir_block.num_dir_entries; ++i) {
+            list[index++] = strdup(dir_block.dir_entries[i].d_name);
         }
-        cur_index++;
-
     }
 
-    // Null-terminate the list
-    list[num_files] = NULL;
-
+    list[total_files] = NULL;
     return list;
 }

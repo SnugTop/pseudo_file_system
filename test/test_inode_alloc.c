@@ -1,3 +1,4 @@
+//test_inode_alloc.c
 #include "disk.h"
 #include "inode.h"
 #include <stdio.h>
