@@ -7,7 +7,7 @@
 //part (e) repeating part (d) for file2.txt
 //also part (f) in terms of outputting file2.txt 
 
-int read1_funcD() {
+int read2_funcD() {
   PDOS_FILE * pf1 = pdos_open("file2.txt", "r");
   for (int count = 0; count < 1023; count++) {
     //a char but input as an int
@@ -28,7 +28,7 @@ int read1_funcD() {
 
 //part (g) in terms of outputting file2.txt
 
-int read1_funcF() {
+int read2_funcF() {
   PDOS_FILE * pf2 = pdos_open("file2.txt", "r");
   for (int count = 0; count < 1023; count++) {
     //a char but input as an int
