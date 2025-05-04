@@ -7,7 +7,7 @@
 //use file-system from (b)
 
 //copy part (c) in part (e) for file2.txt
-int write1_funcC() {
+int write2_funcC() {
   PDOS_FILE * pf1 = pdos_open("file2.txt", "w"); //creates file
 
   for (int count = 0; count < 1023; count++) { //fills in each in turn
@@ -20,7 +20,7 @@ int write1_funcC() {
 }
 
 //part (g) for writing to file2
-int write1_funcC() {
+int write2_funcF() {
   PDOS_FILE * pf2 = pdos_open("file2.txt", "rw"); //creates file
 
   //skips through already-written bytes
