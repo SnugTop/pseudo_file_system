@@ -7,8 +7,9 @@
 //part (d) for file1.txt
 
 int read1_funcD() {
-  PDOS_FILE * pf1 = pdos_open("file1.txt", "r");
-  for (int count = 0; count < 1023; count++) {
+  PDOS_FILE * pf1 = pdos_open("file1.txt", "r"); //only needs to read
+  
+  for (int count = 0; count < 1023; count++) { //goes through each in turn
     //a char but input as an int
     int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
     int c = pdos_fgetc(c, pf1);
@@ -18,11 +19,12 @@ int read1_funcD() {
     char cc = char(c);
     printf("%c", cc); //should output EOF too
   }
+  
   char c = char(pdos_fgetc(c, pf1));
   if (c != EOF) {
-    printf("/n incorrect on number 1024"); 
+    printf("/n incorrect on number 1024"); //for last EOF at end
   }
-  pdos_fclose(pf1);
+  pdos_fclose(pf1); //close pointer
   return 0;
 }
 
