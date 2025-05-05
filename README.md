@@ -81,7 +81,7 @@ Supported Operations:
 
 
 ## Remove Shared Memory 
-*   rm /dev/shm/pdosfs
+*   rm -f /dev/shm/pdosfs
 
 ## Look for Shared Memory 
 *   ls -lh /dev/shm/pdosfs
