@@ -1,41 +1,57 @@
 # Compiler and flags
-CC = gcc
-CFLAGS = -std=c11 -Wall -D_POSIX_C_SOURCE=200809L
+CC      = gcc
+CFLAGS  = -std=c11 -Wall -D_POSIX_C_SOURCE=200809L
 
-# Directories
-SRC_DIR = src
-INCLUDE_DIR = include
-TEST_DIR = test
-
-# Detect if we're on Linux
-OS := $(shell uname)
-ifeq ($(OS), Linux)
+# Detect platform
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
     LDFLAGS = -lrt
 else
     LDFLAGS =
 endif
 
+# Directories
+SRC_DIR     = src
+INCLUDE_DIR = include
+TEST_DIR    = test
+BUILD_DIR   = build
+LIB_DIR     = lib
+STATIC_LIB  = $(LIB_DIR)/libpdosfs.a
+
+# Source files
+SRCS = $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+
 # Test programs
-TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence
+TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence \
+        test_write_file1 test_write_file2 test_read_file1 \
+        test_grow_file1 test_grow_file2 test_print_files test_subdir
 
 # Default target
-all: $(addprefix $(TEST_DIR)/, $(TESTS))
+all: $(STATIC_LIB) $(addprefix $(TEST_DIR)/, $(TESTS))
 
-# Individual test build rules
-$(TEST_DIR)/test_mkdisk: $(TEST_DIR)/test_mkdisk.c $(SRC_DIR)/disk.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+# Build object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
-$(TEST_DIR)/test_inode_alloc: $(TEST_DIR)/test_inode_alloc.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+# Archive static library
+$(STATIC_LIB): $(OBJS)
+	@mkdir -p $(LIB_DIR)
+	ar rcs $@ $^
 
-$(TEST_DIR)/test_dir_ops: $(TEST_DIR)/test_dir_ops.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+# Rule for building test programs using the static lib
+$(TEST_DIR)/%: $(TEST_DIR)/%.c $(STATIC_LIB)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $< -L$(LIB_DIR) -lpdosfs -o $@ $(LDFLAGS)
 
-$(TEST_DIR)/test_persistence: $(TEST_DIR)/test_persistence.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+# Recompile only tests
+tests: $(addprefix $(TEST_DIR)/, $(TESTS))
 
-# Clean build artifacts
+# Clean targets
 clean:
+	rm -rf $(BUILD_DIR) $(LIB_DIR)/libpdosfs.a $(addprefix $(TEST_DIR)/, $(TESTS))
+
+clean_tests:
 	rm -f $(addprefix $(TEST_DIR)/, $(TESTS))
 
-.PHONY: all clean
+.PHONY: all clean clean_tests tests

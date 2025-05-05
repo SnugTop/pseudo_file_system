@@ -1,99 +1,100 @@
-//dir.c
+// dir.c
 #include "dir.h"
 #include "defs.h"
 #include "disk.h"
+#include "inode.h"
 #include <string.h>
 #include <stdlib.h>
 
 /*
  * dir_lookup:
- * Searches the root directory for a file by name.
- * Returns the inode number if found, -1 if not found.
+ *   Searches the root directory’s data_blocks for a file by name.
+ *   Returns the inode number if found, -1 if not found.
  */
 int dir_lookup(const char *filename) {
-    DIR_BLOCK dir_block;
-    unsigned short cur_block = 67;
+    INODE_ENTRY root_inode;
+    if (inode_read(0, &root_inode) < 0) return -1;
 
-    // looks at each directory entry in turn in each block
-    while (cur_block < 1091) {
-        block_read(cur_block, &dir_block); // initially 67 = first data block for root dir
-        for (int i = 0; i < dir_block.num_dir_entries; ++i) {
-            // If filename matches, return associated inode number
-            if (strcmp(dir_block.dir_entries[i].d_name, filename) == 0) {
-                return dir_block.dir_entries[i].d_ino; // Return inode number
+    DIR_BLOCK db;
+    for (int bi = 0; bi < root_inode.data_blocks_used; ++bi) {
+        int blk = root_inode.data_blocks[bi];
+        block_read(blk, &db);
+        for (int i = 0; i < db.num_dir_entries; ++i) {
+            if (strcmp(db.dir_entries[i].d_name, filename) == 0) {
+                return db.dir_entries[i].d_ino;
             }
         }
-        cur_block++;
     }
-
-    // File not found
     return -1;
 }
 
 /*
  * dir_add:
- * Adds a new file (or directory) entry into the root directory.
- * Parameters:
- * - filename: name of the file to add
- * - inode_number: inode number to associate with this file
- * - type: 1 for directory, 2 for regular file
- * Returns 0 on success, -1 if directory is full.
+ *   Adds a new entry to the root directory.  If the last block is full,
+ *   allocates a fresh data–block and appends to root_inode.data_blocks[].
  */
 int dir_add(const char *filename, int inode_number, int type) {
-    DIR_BLOCK dir_block;
-    unsigned short cur_block = 67;
+    INODE_ENTRY root_inode;
+    inode_read(0, &root_inode);
 
-    // Search for a block with space
-    while (cur_block < 1091) {
-        block_read(cur_block, &dir_block);
-
-        if (dir_block.num_dir_entries < MAX_DIR_ENTRIES) {
-            DIR_ENTRY *new_entry = &dir_block.dir_entries[dir_block.num_dir_entries];
-
-            strncpy(new_entry->d_name, filename, MAX_NAME_LENGTH);
-            new_entry->d_ino = inode_number;
-            new_entry->d_type = type;
-            new_entry->d_reclen = sizeof(DIR_ENTRY);
-            new_entry->d_off = 0;
-
-            dir_block.num_dir_entries++;
-            block_write(cur_block, &dir_block);
-            return 0;
+    DIR_BLOCK db;
+    int blk, i;
+    // find a block with space
+    for (int bi = 0; bi < root_inode.data_blocks_used; ++bi) {
+        blk = root_inode.data_blocks[bi];
+        block_read(blk, &db);
+        if (db.num_dir_entries < MAX_DIR_ENTRIES) {
+            goto have_space;
         }
-
-        cur_block++;
     }
-
-    return -1; // Directory full
+    // no space: allocate new block
+    {
+        int newblk = data_block_allocate();
+        if (newblk < 0) return -1;
+        root_inode.data_blocks[root_inode.data_blocks_used++] = newblk;
+        inode_write(0, &root_inode);
+        memset(&db, 0, sizeof(db));
+        blk = newblk;
+    }
+have_space:
+    // insert at db.num_dir_entries
+    i = db.num_dir_entries++;
+    strncpy(db.dir_entries[i].d_name, filename, MAX_NAME_LENGTH);
+    db.dir_entries[i].d_ino    = inode_number;
+    db.dir_entries[i].d_type   = type;
+    db.dir_entries[i].d_reclen = sizeof(DIR_ENTRY);
+    db.dir_entries[i].d_off    = 0;
+    block_write(blk, &db);
+    return 0;
 }
 
 /*
  * pdos_dir:
- * Returns a list of file names (strings) currently in the root directory.
- * The returned list is NULL-terminated.
- * Caller is responsible for freeing the list and each string inside it.
+ *   Returns a NULL‐terminated array of strings for the root directory.
+ *   Caller frees each string + the array.
  */
 char **pdos_dir(void) {
-    DIR_BLOCK dir_block;
-    int total_files = 0;
+    INODE_ENTRY root_inode;
+    if (inode_read(0, &root_inode) < 0) return NULL;
 
-    // First pass to count total files
-    for (int block = 67; block < 1091; ++block) {
-        block_read(block, &dir_block);
-        total_files += dir_block.num_dir_entries;
+    DIR_BLOCK db;
+    int total = 0;
+    // count entries
+    for (int bi = 0; bi < root_inode.data_blocks_used; ++bi) {
+        block_read(root_inode.data_blocks[bi], &db);
+        total += db.num_dir_entries;
     }
 
-    char **list = malloc(sizeof(char *) * (total_files + 1)); // +1 for NULL terminator
+    char **list = malloc((total + 1) * sizeof(char *));
     if (!list) return NULL;
 
-    int index = 0;
-    for (int block = 67; block < 1091; ++block) {
-        block_read(block, &dir_block);
-        for (int i = 0; i < dir_block.num_dir_entries; ++i) {
-            list[index++] = strdup(dir_block.dir_entries[i].d_name);
+    int idx = 0;
+    for (int bi = 0; bi < root_inode.data_blocks_used; ++bi) {
+        block_read(root_inode.data_blocks[bi], &db);
+        for (int i = 0; i < db.num_dir_entries; ++i) {
+            list[idx++] = strdup(db.dir_entries[i].d_name);
         }
     }
-
-    list[total_files] = NULL;
+    list[idx] = NULL;
     return list;
 }
