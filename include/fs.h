@@ -17,11 +17,11 @@ typedef struct {
     unsigned short inode_index;
     unsigned short data_block_cur;       //which data block is the pointer on
     unsigned short loc_data_in_block;    //where I am within that data block
-    char buffer[1024];                  //unspecified size
+    char buffer[1024];                  //1024 bytes
     bool modeW;                     //write
     bool modeX;                     //execute
     bool modeR;                     //read
-} PDOS_FILE;
+} PDOS_FILE; //1035 bytes total
 
 int pdos_read(PDOS_FILE *pf, char *buf, size_t len);
 int pdos_write(PDOS_FILE *pf, const char *buf, size_t len);
