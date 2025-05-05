@@ -6,7 +6,7 @@
 #include <string.h>
 
 int main() {
-    pdos_mkdisk(); // maps existing disk
+    pdos_mkdisk(true); // maps existing disk
     PDOS_FILE *pf = pdos_open("file1.txt", "w");
     if (!pf) {
         printf("Failed to open file1.txt for writing\n");

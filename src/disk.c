@@ -12,6 +12,7 @@
 #include <stdio.h>      // For perror(), fprintf()
 #include <stdlib.h>     // For exit()
 #include <time.h>       // For time()
+#include <stdbool.h>    // For bool type
 
 // Global pointer to the base address of the pseudo-disk
 void *disk_base = NULL;
@@ -22,25 +23,25 @@ void *disk_base = NULL;
  * Unlinks any previous disk with the same name to avoid conflicts.
  * Returns 0 on success, -1 on error.
  */
-int pdos_mkdisk(void) {
-    // Always unlink any leftover disk from a previous run
-    shm_unlink(DISK_NAME);
+int pdos_mkdisk(bool fresh) {
+    if (fresh) {
+        shm_unlink(DISK_NAME); // Only unlink if we're starting clean
+    }
 
-    // Create and open a shared memory object
     int fd = shm_open(DISK_NAME, O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
         perror("shm_open failed");
         return -1;
     }
 
-    // Set the size of the shared memory object
-    if (ftruncate(fd, DISK_SIZE) == -1) {
-        perror("ftruncate failed");
-        close(fd);
-        return -1;
+    if (fresh) {
+        if (ftruncate(fd, DISK_SIZE) == -1) {
+            perror("ftruncate failed");
+            close(fd);
+            return -1;
+        }
     }
 
-    // Map the shared memory object into the process's address space
     disk_base = mmap(NULL, DISK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (disk_base == MAP_FAILED) {
         perror("mmap failed");
@@ -48,9 +49,10 @@ int pdos_mkdisk(void) {
         return -1;
     }
 
-    close(fd); // File descriptor no longer needed after mmap
+    close(fd);
     return 0;
 }
+
 
 /*
  * block_read:
@@ -86,23 +88,28 @@ int block_write(int block_number, const void *buffer) {
  * Returns the block number (relative to data blocks) or -1 if none available.
  */
 int data_block_allocate(void) {
-    unsigned short bitmap[BLOCK_SIZE / 2]; // 512 words (1024 bytes)
+    unsigned short bitmap[BLOCK_SIZE / 2]; // 512 words
     block_read(2, bitmap); // Read the data bitmap (Block 2)
 
     for (int word = 0; word < 512; ++word) {
         if (bitmap[word] != 0xFFFF) {
             for (int bit = 0; bit < 16; ++bit) {
+                int relative_block = (word * 16) + bit;
+
+                if (relative_block == 0) continue; // skip root dir block
+
                 if ((bitmap[word] & (1 << bit)) == 0) {
                     bitmap[word] |= (1 << bit);
                     block_write(2, bitmap);
-                    return (word * 16) + bit;
+                    return 67 + relative_block; // ✅ return ABSOLUTE block number
                 }
             }
         }
     }
 
-    return -1; // No free blocks
+    return -1;
 }
+
 
 /*
  * pdos_mkfs:

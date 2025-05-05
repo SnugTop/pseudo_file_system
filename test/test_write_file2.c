@@ -6,7 +6,7 @@
 #include <string.h>
 
 int main() {
-    pdos_mkdisk(); // reuse existing disk
+    pdos_mkdisk(true); // reuse existing disk
     PDOS_FILE *pf = pdos_open("file2.txt", "w");
     if (!pf) {
         printf("Failed to open file2.txt for writing\n");

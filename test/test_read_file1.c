@@ -6,7 +6,7 @@
 #include <string.h>
 
 int main() {
-    pdos_mkdisk();
+    pdos_mkdisk(true);
 
     if (!pdos_exists("file1.txt")) {
         printf("file1.txt does not exist.\n");

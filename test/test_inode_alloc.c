@@ -2,9 +2,10 @@
 #include "disk.h"
 #include "inode.h"
 #include <stdio.h>
+#include <stdbool.h>  // Required for using 'true'
 
 int main() {
-    pdos_mkdisk();
+    pdos_mkdisk(true);     // Request a fresh disk
     pdos_mkfs("MYFS2025");
 
     int inode_num = inode_allocate();

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 int main() {
-    pdos_mkdisk();
+    pdos_mkdisk(true);
     pdos_mkfs("MYFS2025");
 
     int ino = inode_allocate();

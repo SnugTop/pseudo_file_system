@@ -30,9 +30,27 @@ PDOS_FILE *pdos_open(const char *fname, const char *mode) {
         inode_write(loc_file, &i_e);
         // new file added in
         dir_add(fname, loc_file, FILE_TYPE); 
+    } else {
+        // sanity check for existing inode's block list
+        INODE_ENTRY check_inode;
+        inode_read(loc_file, &check_inode);
+
+        for (int i = 0; i < MAX_DATA_BLOCKS; ++i) {
+            if (check_inode.data_blocks[i] == 0) {
+                // 0 is invalid — should be 0xFFFF or real block
+                fprintf(stderr, "Warning: correcting zero block at data_blocks[%d] for file '%s'\n", i, fname);
+                check_inode.data_blocks[i] = 0xFFFF;
+            } else if (check_inode.data_blocks[i] != 0xFFFF &&
+                       (check_inode.data_blocks[i] >= TOTAL_BLOCKS || check_inode.data_blocks[i] < 0)) {
+                fprintf(stderr, "Error: invalid block number %d in inode for '%s'\n", check_inode.data_blocks[i], fname);
+                return NULL;
+            }
+        }
+
+        inode_write(loc_file, &check_inode);
     }
 
-    //if file already exists then loc_file == inode number
+    // if file already exists then loc_file == inode number
     int div = loc_file / 16;  // (loc_file)/16
     int block = 3 + div;      // which block it's in
     int loc = loc_file % 16;  // which inode within the block 
@@ -63,6 +81,7 @@ PDOS_FILE *pdos_open(const char *fname, const char *mode) {
 
     return pf;
 }
+
 
 int pdos_fgetc(PDOS_FILE *pf) {
     if (!pf || pf->modeR == 0) {
@@ -115,7 +134,8 @@ void pdos_fputc(int b, PDOS_FILE *pf) {
         if (new_block == -1) return;
         i_entry->data_blocks[pf->data_block_cur] = new_block;
         i_entry->data_blocks_used++;
-    }
+}
+
 
     DATA_BLOCK d_block;
     block_read(67 + i_entry->data_blocks[pf->data_block_cur], &d_block);
