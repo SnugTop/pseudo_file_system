@@ -1,11 +1,12 @@
-//test_inode_alloc.c
+// test/test_inode_alloc.c
 #include "disk.h"
 #include "inode.h"
 #include <stdio.h>
-#include <stdbool.h>  // Required for using 'true'
+#include <stdbool.h>
 
 int main() {
-    pdos_mkdisk(true);     // Request a fresh disk
+    // brand‐new disk
+    pdos_mkdisk(true);
     pdos_mkfs("MYFS2025");
 
     int inode_num = inode_allocate();
@@ -14,6 +15,5 @@ int main() {
     } else {
         printf("Failed to allocate inode\n");
     }
-
     return 0;
 }
