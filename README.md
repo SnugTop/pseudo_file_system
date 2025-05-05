@@ -76,3 +76,12 @@ Supported Operations:
 * pdos_fputc()/pdos_fgetc() – Write/read data to/from a file.
 
 * pdos_fclose() – Finalize writing, flush buffers, and update inode.
+
+
+
+
+## Remove Shared Memory 
+*   rm /dev/shm/pdosfs
+
+## Look for Shared Memory 
+*   ls -lh /dev/shm/pdosfs

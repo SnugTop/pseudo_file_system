@@ -32,10 +32,10 @@ PDOS_FILE *pdos_open(const char *fname, const char *mode) {
         dir_add(fname, loc_file, FILE_TYPE); 
     }
 
-    // if file already exists then loc_file == inode number
+    //if file already exists then loc_file == inode number
     int div = loc_file / 16;  // (loc_file)/16
     int block = 3 + div;      // which block it's in
-    int loc = loc_file % 16;  // which inode within the block
+    int loc = loc_file % 16;  // which inode within the block 
 
     // allocate and fill PDOS_FILE structure
     PDOS_FILE *pf = malloc(sizeof(PDOS_FILE));

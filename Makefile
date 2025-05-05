@@ -16,7 +16,8 @@ else
 endif
 
 # Test programs
-TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence
+TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence \
+        test_write_file1 test_write_file2 test_read_file1
 
 # Default target
 all: $(addprefix $(TEST_DIR)/, $(TESTS))
@@ -32,6 +33,15 @@ $(TEST_DIR)/test_dir_ops: $(TEST_DIR)/test_dir_ops.c $(SRC_DIR)/disk.c $(SRC_DIR
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
 
 $(TEST_DIR)/test_persistence: $(TEST_DIR)/test_persistence.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+
+$(TEST_DIR)/test_write_file1: $(TEST_DIR)/test_write_file1.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+
+$(TEST_DIR)/test_write_file2: $(TEST_DIR)/test_write_file2.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
+
+$(TEST_DIR)/test_read_file1: $(TEST_DIR)/test_read_file1.c $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ $(LDFLAGS)
 
 # Clean build artifacts

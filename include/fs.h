@@ -9,6 +9,8 @@
 #include "disk.h"
 #include "dir.h"
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 //I have no clue if this is your plan for the file structure, but as opposed to a directory...
 
@@ -23,8 +25,11 @@ typedef struct {
     bool modeR;                     //read
 } PDOS_FILE;
 
+PDOS_FILE *pdos_open(const char *fname, const char *mode);
+void pdos_fclose(PDOS_FILE *pf);
 int pdos_read(PDOS_FILE *pf, char *buf, size_t len);
 int pdos_write(PDOS_FILE *pf, const char *buf, size_t len);
 bool pdos_exists(const char *fname);
+
 
 #endif
