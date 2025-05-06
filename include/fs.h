@@ -1,4 +1,3 @@
-//fs.h
 #ifndef FS_H
 #define FS_H
 
@@ -23,13 +22,12 @@ typedef struct {
 } PDOS_FILE;
 
 PDOS_FILE *pdos_open(const char *fname, const char *mode);
+int         pdos_fgetc(PDOS_FILE *pf);          // <-- Add this
+void        pdos_fputc(int b, PDOS_FILE *pf);   // <-- And this
 void        pdos_fclose(PDOS_FILE *pf);
 int         pdos_read(PDOS_FILE *pf, char *buf, size_t len);
 int         pdos_write(PDOS_FILE *pf, const char *buf, size_t len);
 bool        pdos_exists(const char *fname);
-
-/* Create a new subdirectory in the root.
- * Returns 0 on success, -1 on failure (e.g. no free inode). */
-int pdos_mkdir(const char *dirname);
+int         pdos_mkdir(const char *dirname);
 
 #endif

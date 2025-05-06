@@ -25,7 +25,8 @@ OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 # Test programs
 TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence \
         test_write_file1 test_write_file2 test_read_file1 \
-        test_grow_file1 test_grow_file2 test_print_files test_subdir
+        test_grow_file1 test_grow_file2 test_print_files test_subdir \
+        for_submission
 
 # Default target
 all: $(STATIC_LIB) $(addprefix $(TEST_DIR)/, $(TESTS))

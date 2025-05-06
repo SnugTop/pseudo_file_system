@@ -4,277 +4,133 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-//this is the 
-
 int main() {
-    // create and format a fresh disk
-    // part A: one that creates a disk file system
-    printf("/n short program A/n");
+    // Part A: Create disk
+    printf("\nShort Program A\n");
     if (pdos_mkdisk(true) == 0) {
         printf("Disk created successfully.\n");
-        //since ftruncate() is called, if the size is not DISK_SIZE (1024*1091) then an error will occur
-        //this does not warrant a specific printing
     } else {
         printf("Disk creation failed.\n");
         return 1;
     }
-    //  part B: one that formats and initializes the disk by writing the FS structure
-    //  again, nothing to output
-    printf("/n short program B/n");
+
+    // Part B: Format file system
+    printf("\nShort Program B\n");
     if (pdos_mkfs("MYFS2025") == 0) {
         printf("Filesystem formatted successfully.\n");
     } else {
         printf("Filesystem format failed.\n");
         return 1;
     }
-    //  part C: one that uses the above FS and creates a test file(file1.txt) in the root directory
-    printf("/n short program C/n");
-    PDOS_FILE * pf1 = pdos_open("file1.txt", "w"); //creates file
-    //nothing actually written
-    for (int count = 0; count < 1023; count++) { //fills in each in turn
-      int c = 'A' + (count % 26); //A-Z, A-Z, etc.
-      //a char but input as an int
-      pdos_fputc(c, pf1);
+
+    // Part C: Write 1023 chars to file1.txt
+    printf("\nShort Program C\n");
+    PDOS_FILE *pf1 = pdos_open("file1.txt", "w");
+    for (int i = 0; i < 1023; i++) {
+        int c = 'A' + (i % 26);
+        pdos_fputc(c, pf1);
     }
     pdos_fclose(pf1);
-  
-    //  part D: one that reads in the data from above file and prints it out ensuring it matches
-    printf("/n short program D/n");
-    PDOS_FILE * pf2 = pdos_open("file1.txt", "r"); //only needs to read
-  
-    for (int count = 0; count < 1023; count++) { //goes through each in turn
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf2);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
-    }
-  
-    char c = char(pdos_fgetc(pf2)); //EOF
-    if (c != EOF) {
-      printf("/n incorrect on number 1024/n"); //for last EOF at end
-    }
-    pdos_fclose(pf2); //close pointer
 
-    //  part E: Repeat (c,d), this time create a second file file2.txt
-    printf("/n short program E/n");
-  
-    //  E replicating C:
-    printf("/n short program E replicating C/n");
-    PDOS_FILE * pf3 = pdos_open("file2.txt", "w"); //creates file
+    // Part D: Read file1.txt and verify
+    printf("\nShort Program D\n");
+    PDOS_FILE *pf2 = pdos_open("file1.txt", "r");
+    for (int i = 0; i < 1023; i++) {
+        int expected = 'A' + (i % 26);
+        int c = pdos_fgetc(pf2);
+        if (c != expected) {
+            printf("Mismatch at position %d\n", i + 1);
+        }
+    }
+    int eof_check = pdos_fgetc(pf2);
+    if (eof_check != EOF) {
+        printf("Expected EOF at position 1024\n");
+    }
+    pdos_fclose(pf2);
 
-    for (int count = 0; count < 1023; count++) { //fills in each in turn
-      int c = 'A' + (count % 26); //A-Z, A-Z, etc.
-      //a char but input as an int
-      pdos_fputc(c, pf3);
+    // Part E: Repeat with file2.txt
+    printf("\nShort Program E\n");
+    PDOS_FILE *pf3 = pdos_open("file2.txt", "w");
+    for (int i = 0; i < 1023; i++) {
+        int c = 'A' + (i % 26);
+        pdos_fputc(c, pf3);
     }
     pdos_fclose(pf3);
-  
-    //  E replicating D:
-    printf("/n short program E replicating D/n");
-    PDOS_FILE * pf4 = pdos_open("file2.txt", "r");
-    for (int count = 0; count < 1023; count++) {
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf4);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
+
+    PDOS_FILE *pf4 = pdos_open("file2.txt", "r");
+    for (int i = 0; i < 1023; i++) {
+        int expected = 'A' + (i % 26);
+        int c = pdos_fgetc(pf4);
+        if (c != expected) {
+            printf("Mismatch at file2.txt pos %d\n", i + 1);
+        }
     }
-    char c = char(pdos_fgetc(pf4)); //EOF
-    if (c != EOF) {
-      printf("/n incorrect on number 1024/n"); 
+    eof_check = pdos_fgetc(pf4);
+    if (eof_check != EOF) {
+        printf("Expected EOF at file2.txt pos 1024\n");
     }
     pdos_fclose(pf4);
 
-    //part F:
-    printf("/n short program F/n");
-    PDOS_FILE * pf5 = pdos_open("file1.txt", "rw"); //creates file -- rw to enable both get and put
-
-    //skips through already-written bytes
-    for (int count = 0; count < 1023; count++) { //fills in each in turn
-      //a char but input as an int
-      pdos_getc(pf5);
+    // Part F: Extend file1.txt with 1024 more chars
+    printf("\nShort Program F\n");
+    PDOS_FILE *pf5 = pdos_open("file1.txt", "rw");
+    for (int i = 0; i < 1023; i++) pdos_fgetc(pf5); // Skip existing
+    for (int i = 0; i < 1024; i++) {
+        int c = 'A' + (i % 26);
+        pdos_fputc(c, pf5);
     }
-
-    //newly-written bytes
-    for (int count = 0; count < 1024; count++) { //fills in each in turn
-      int c = 'A' + (count % 26); //A-Z, A-Z, etc.
-      //a char but input as an int
-      pdos_fputc(c, pf5);
-    }
-
-    //close file
     pdos_fclose(pf5);
-    //  F replicating D -- checking file1
-    printf("/n short program F replicating D for file1/n");
-    PDOS_FILE * pf6 = pdos_open("file1.txt", "r");
-    for (int count = 0; count < 1023; count++) {
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf6);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
+
+    // Verify extended file1.txt
+    printf("\nVerify Extended file1.txt\n");
+    PDOS_FILE *pf6 = pdos_open("file1.txt", "r");
+    for (int i = 0; i < 2047; i++) {
+        int expected = 'A' + (i % 26);
+        int c = pdos_fgetc(pf6);
+        if (c != expected) {
+            printf("Mismatch at file1.txt pos %d\n", i + 1);
+        }
     }
-    for (int count = 0; count < 1024; count++) { //indices 1023 - 2046, inclusive
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
-      int c = pdos_fgetc(pf6);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1023+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
-    }
-    char c = char(pdos_fgetc(pf6));
-    if (c != EOF) {
-      printf("/n incorrect on number 2048/n");
+    eof_check = pdos_fgetc(pf6);
+    if (eof_check != EOF) {
+        printf("Expected EOF at file1.txt pos 2048\n");
     }
     pdos_fclose(pf6);
 
-    //  F replicating D -- checking file2
-    printf("/n short program F replicating D for file2/n");
-    PDOS_FILE * pf7 = pdos_open("file2.txt", "r");
-    for (int count = 0; count < 1023; count++) {
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf7);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
-    }
-    char c = char(pdos_fgetc(pf7));
-    if (c != EOF) {
-      printf("/n incorrect on number 1024/n"); 
+    // Part G: Extend file2.txt with 1024 more chars
+    printf("\nShort Program G\n");
+    PDOS_FILE *pf7 = pdos_open("file2.txt", "rw");
+    for (int i = 0; i < 1023; i++) pdos_fgetc(pf7);
+    for (int i = 0; i < 1024; i++) {
+        int c = 'A' + (i % 26);
+        pdos_fputc(c, pf7);
     }
     pdos_fclose(pf7);
 
-    //part G:
-    printf("/n short program G/n");
-    PDOS_FILE * pf8 = pdos_open("file2.txt", "rw"); //creates file
-
-    //skips through already-written bytes
-    for (int count = 0; count < 1023; count++) { //fills in each in turn
-      //a char but input as an int
-      pdos_getc(pf8);
+    // Verify extended file2.txt
+    printf("\nVerify Extended file2.txt\n");
+    PDOS_FILE *pf8 = pdos_open("file2.txt", "r");
+    for (int i = 0; i < 2047; i++) {
+        int expected = 'A' + (i % 26);
+        int c = pdos_fgetc(pf8);
+        if (c != expected) {
+            printf("Mismatch at file2.txt pos %d\n", i + 1);
+        }
     }
-
-    //newly-written bytes
-    for (int count = 0; count < 1024; count++) { //fills in each in turn
-      int c = 'A' + (count % 26); //A-Z, A-Z, etc.
-      //a char but input as an int
-      pdos_fputc(c, pf8);
+    eof_check = pdos_fgetc(pf8);
+    if (eof_check != EOF) {
+        printf("Expected EOF at file2.txt pos 2048\n");
     }
-
-    //close file
     pdos_fclose(pf8);
 
-    //  G replicating D -- checking file1
-    printf("/n short program G replicating D for file2/n");
-    printf("/n short program F replicating D for file1/n");
-    PDOS_FILE * pf9 = pdos_open("file1.txt", "r");
-    for (int count = 0; count < 1023; count++) {
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf9);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
+    // Part H: List contents of root directory
+    printf("\nShort Program H\n");
+    char **files = pdos_dir();
+    if (files) {
+        for (int i = 0; files[i]; i++) {
+            printf("File: %s\n", files[i]);
+        }
     }
-    for (int count = 0; count < 1024; count++) { //indices 1023 - 2046, inclusive
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
-      int c = pdos_fgetc(pf9);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1023+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
-    }
-    char c = char(pdos_fgetc(pf9));
-    if (c != EOF) {
-      printf("/n incorrect on number 2048/n");
-    }
-    pdos_fclose(pf9);
-  
-    //  G replicating D -- checking file2
-    printf("/n short program G replicating D for file2/n");
-    PDOS_FILE * pf0 = pdos_open("file2.txt", "r");
-    for (int count = 0; count < 1023; count++) {
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc.
-      int c = pdos_fgetc(pf0);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
-    }
-    for (int count = 0; count < 1024; count++) { //indices 1023 - 2046, inclusive
-      //a char but input as an int
-      int c1 = 'A' + (count % 26); //A-Z, A-Z, etc because starts over
-      int c = pdos_fgetc(pf0);
-      if (c != c1) {
-        printf("/n incorrect on number %d/n", count+1023+1);
-      }
-      char cc = char(c);
-      printf("%c", cc); //should output EOF too
-    }
-    char c = char(pdos_fgetc(pf0));
-    if (c != EOF) {
-      printf("/n incorrect on number 2048/n");
-    }
-    pdos_fclose(pf0);
-  
-    //part H file 1:
-    printf("/n short program H for file 1/n");
-    PDOS_FILE * pfA = pdos_open(file_name, "r");
-    char c1 = "";
-    unsigned int i1 = 0; //shows how many bytes printed
-    char* cc1 = new char[1024]; //what will be outputted
-    while (c1 != EOF) {
-      c1 = pdos_fgetc(pfA);
-      cc1[i1] = c1;
-      i1++;
-    }
-  
-    printf("%s/n", cc1); //actual contents
-    printf("%d/n", i1); //should be 1024
 
-    pdos_close(pfA);
-  
-    //part H file 2:
-    printf("/n short program H for file 2/n");
-    PDOS_FILE * pfB = pdos_open(file_name, "r");
-    char c1 = "";
-    unsigned int i1 = 0; //shows how many bytes printed
-    char* cc1 = new char[1024]; //what will be outputted
-    while (c1 != EOF) {
-      c1 = pdos_fgetc(pfB);
-      cc1[i1] = c1;
-      i1++;
-    }
-  
-    printf("%s/n", cc1); //actual contents
-    printf("%d/n", i1); //should be 1024
-
-    pdos_close(pfB);
-    
-    //part I:
-    printf("/n short program I/n");
-    char** ccs = pdos_dir();
-    for (short count; count < size(ccs) / 12; count++) {
-        //divide by 12 because max name length is 12 and that's what's stored
-        printf("%s/n", ccs[count]);
-    }
-  
     return 0;
 }
