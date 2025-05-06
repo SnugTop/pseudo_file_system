@@ -3,6 +3,7 @@
 #include "fs.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 int main() {
     // Part A: Create disk
@@ -84,11 +85,20 @@ int main() {
     // Verify extended file1.txt
     printf("\nVerify Extended file1.txt\n");
     PDOS_FILE *pf6 = pdos_open("file1.txt", "r");
-    for (int i = 0; i < 2047; i++) {
+    // 1) verify the original 1023 bytes
+    for (int i = 0; i < 1023; i++) {
         int expected = 'A' + (i % 26);
         int c = pdos_fgetc(pf6);
         if (c != expected) {
-            printf("Mismatch at file1.txt pos %d\n", i + 1);
+            printf("Mismatch original at pos %d\n", i + 1);
+        }
+    }
+    // 2) verify the 1024 appended bytes
+    for (int j = 0; j < 1024; j++) {
+        int expected = 'A' + (j % 26);
+        int c = pdos_fgetc(pf6);
+        if (c != expected) {
+            printf("Mismatch appended at pos %d\n", 1023 + j + 1);
         }
     }
     eof_check = pdos_fgetc(pf6);
@@ -110,11 +120,20 @@ int main() {
     // Verify extended file2.txt
     printf("\nVerify Extended file2.txt\n");
     PDOS_FILE *pf8 = pdos_open("file2.txt", "r");
-    for (int i = 0; i < 2047; i++) {
+    // 1) original
+    for (int i = 0; i < 1023; i++) {
         int expected = 'A' + (i % 26);
         int c = pdos_fgetc(pf8);
         if (c != expected) {
-            printf("Mismatch at file2.txt pos %d\n", i + 1);
+            printf("Mismatch original at file2.txt pos %d\n", i + 1);
+        }
+    }
+    // 2) appended
+    for (int j = 0; j < 1024; j++) {
+        int expected = 'A' + (j % 26);
+        int c = pdos_fgetc(pf8);
+        if (c != expected) {
+            printf("Mismatch appended at file2.txt pos %d\n", 1023 + j + 1);
         }
     }
     eof_check = pdos_fgetc(pf8);
@@ -129,7 +148,22 @@ int main() {
     if (files) {
         for (int i = 0; files[i]; i++) {
             printf("File: %s\n", files[i]);
+            free(files[i]);
         }
+        free(files);
+    }
+
+    // Part I: Create a subdirectory and re‐list
+    printf("\nShort Program I\n");
+    pdos_mkdir("subdir1");
+    char **entries = pdos_dir();
+    if (entries) {
+        printf("After mkdir:\n");
+        for (int i = 0; entries[i]; i++) {
+            printf("  %s\n", entries[i]);
+            free(entries[i]);
+        }
+        free(entries);
     }
 
     return 0;
