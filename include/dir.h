@@ -12,14 +12,14 @@ typedef struct {
     short d_off;
     unsigned short d_reclen;
     unsigned char d_type;
-    char padding[13];
-} DIR_ENTRY;
+    char padding[32];
+} DIR_ENTRY; //size 51 bytes
 
 #define MAX_DIR_ENTRIES (BLOCK_SIZE / sizeof(DIR_ENTRY))
 
 typedef struct {
-    int num_dir_entries;
-    DIR_ENTRY dir_entries[MAX_DIR_ENTRIES];
+    int num_dir_entries; //size 4 bytes
+    DIR_ENTRY dir_entries[MAX_DIR_ENTRIES]; //size 51*20 = 1020
 } DIR_BLOCK;
 
 typedef struct {
