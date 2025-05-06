@@ -14,29 +14,18 @@
  * Returns -1 if no free inodes are available.
  */
 int inode_allocate(void) {
-    unsigned short bitmap[BLOCK_SIZE / 2]; // 1024 bytes / 2 = 512 unsigned shorts
+    unsigned char bitmap[BLOCK_SIZE / 2]; // 1024 bytes / 2 = 512 unsigned shorts
 
     // Read the inode bitmap block (block 1)
     block_read(1, bitmap);
 
     // Scan through each 16-bit word
-    for (int word = 0; word < (BLOCK_SIZE / 2); ++word) {
-        // If this word isn't fully occupied (not all bits are 1)
-        if (bitmap[word] != 0xFFFF) {
-            // Scan each bit in the 16-bit word
-            for (int bit = 0; bit < 16; ++bit) {
-                // If this bit is 0 (free inode)
-                if ((bitmap[word] & (1 << bit)) == 0) {
-                    // Mark the inode as used (set the bit to 1)
-                    bitmap[word] |= (1 << bit);
-
-                    // Write the updated bitmap back to disk
-                    block_write(1, bitmap);
-
-                    // Return inode number: word * 16 + bit
-                    return (word * 16) + bit;
-                }
-            }
+    // Pretty sure we allocate inodes individually
+    for (int word = 0; word < BLOCK_SIZE / 2; ++word) {
+        if (bitmap[w] == 0) {
+            bitmap[w] = 1;
+            block_write(2, bitmap);
+            return 3 + w;  
         }
     }
 
