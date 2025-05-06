@@ -236,27 +236,12 @@ int main() {
   
     //part H file 1:
     printf("/n short program H for file 1/n");
-    PDOS_FILE * pf1 = pdos_open(file_name, "r");
+    PDOS_FILE * pfA = pdos_open(file_name, "r");
     char c1 = "";
     unsigned int i1 = 0; //shows how many bytes printed
     char* cc1 = new char[1024]; //what will be outputted
     while (c1 != EOF) {
-      c1 = pdos_fgetc(pf1);
-      cc1[i1] = c1;
-      i1++;
-    }
-  
-    printf("%s/n", cc1); //actual contents
-    printf("%d/n", i1); //should be 1024
-  
-    //part H file 2:
-    printf("/n short program H for file 2/n");
-    PDOS_FILE * pf1 = pdos_open(file_name, "r");
-    char c1 = "";
-    unsigned int i1 = 0; //shows how many bytes printed
-    char* cc1 = new char[1024]; //what will be outputted
-    while (c1 != EOF) {
-      c1 = pdos_fgetc(pf1);
+      c1 = pdos_fgetc(pfA);
       cc1[i1] = c1;
       i1++;
     }
@@ -264,6 +249,25 @@ int main() {
     printf("%s/n", cc1); //actual contents
     printf("%d/n", i1); //should be 1024
 
+    pdos_close(pfA);
+  
+    //part H file 2:
+    printf("/n short program H for file 2/n");
+    PDOS_FILE * pfB = pdos_open(file_name, "r");
+    char c1 = "";
+    unsigned int i1 = 0; //shows how many bytes printed
+    char* cc1 = new char[1024]; //what will be outputted
+    while (c1 != EOF) {
+      c1 = pdos_fgetc(pfB);
+      cc1[i1] = c1;
+      i1++;
+    }
+  
+    printf("%s/n", cc1); //actual contents
+    printf("%d/n", i1); //should be 1024
+
+    pdos_close(pfB);
+    
     //part I:
     printf("/n short program I/n");
     char** ccs = pdos_dir();
