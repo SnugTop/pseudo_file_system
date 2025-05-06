@@ -76,21 +76,16 @@ int block_write(int block_number, const void *buffer) {
  *   Returns an *absolute* block number >= 67 on success, or -1 if none.
  */
 int data_block_allocate(void) {
-    unsigned short bitmap[BLOCK_SIZE/2];
+    unsigned char bitmap[BLOCK_SIZE];
     block_read(2, bitmap);             // read data‐bitmap (block 2)
 
     // 1024 bits => 512 words
-    for (int w = 0; w < BLOCK_SIZE/2; ++w) {
-        if (bitmap[w] != 0xFFFF) {
-            for (int b = 0; b < 16; ++b) {
-                int rel = w*16 + b;
-                if (rel == 0) continue;       // never re‐allocate the root dir block
-                if (!(bitmap[w] & (1<<b))) {
-                    bitmap[w] |= (1<<b);
-                    block_write(2, bitmap);
-                    return 67 + rel;         // absolute block number
-                }
-            }
+    // I think we are allocating entire blocks, of which there are 1024
+    for (int w = 0; w < BLOCK_SIZE; ++w) {
+        if (bitmap[w] == 0) {
+            bitmap[w] = 1;
+            block_write(2, bitmap);
+            return 67 + w;  //proposed making it simpler; not entirely sure
         }
     }
     return -1;
@@ -112,13 +107,13 @@ int pdos_mkfs(char *id) {
     block_write(0, sb);
 
     // 1) inode‐bitmap: mark inode‐0 used
-    unsigned short ibmap[BLOCK_SIZE/2] = {0};
-    ibmap[0] = 0x0001;
+    unsigned char ibmap[BLOCK_SIZE] = {0};
+    ibmap[0] = 1;
     block_write(1, ibmap);
 
     // 2) data‐bitmap: reserve relative‐0 (absolute block 67) for root dir
-    unsigned short dbmap[BLOCK_SIZE/2] = {0};
-    dbmap[0] = 0x0001;
+    unsigned char dbmap[BLOCK_SIZE] = {0};
+    dbmap[0] = 1;
     block_write(2, dbmap);
 
     // 3) root inode (inode #0)
