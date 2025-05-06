@@ -265,6 +265,12 @@ int main() {
     printf("%d/n", i1); //should be 1024
 
     //part I:
+    printf("/n short program I/n");
+    char** ccs = pdos_dir();
+    for (short count; count < size(ccs) / 12; count++) {
+        //divide by 12 because max name length is 12 and that's what's stored
+        printf("%s/n", ccs[count]);
+    }
   
     return 0;
 }
