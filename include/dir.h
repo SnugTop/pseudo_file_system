@@ -15,11 +15,12 @@ typedef struct {
     char padding[13];
 } DIR_ENTRY; //size 51 bytes
 
-#define MAX_DIR_ENTRIES (BLOCK_SIZE / sizeof(DIR_ENTRY))
+#define MAX_DIR_ENTRIES (BLOCK_SIZE / sizeof(DIR_ENTRY) - 1)
 
 typedef struct {
     int num_dir_entries; //size 4 bytes
-    DIR_ENTRY dir_entries[MAX_DIR_ENTRIES]; //size 51*20 = 1020
+    DIR_ENTRY dir_entries[MAX_DIR_ENTRIES]; //size 32*31 = 992
+    //28 unused bytes
 } DIR_BLOCK;
 
 typedef struct {
