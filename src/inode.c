@@ -25,7 +25,7 @@ int inode_allocate(void) {
         if (bitmap[w] == 0) {
             bitmap[w] = 1;
             block_write(2, bitmap);
-            return 3 + w;  
+            return w;  
         }
     }
 
