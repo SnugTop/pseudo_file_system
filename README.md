@@ -96,6 +96,52 @@ Supported Operations -- Helper Methods:
 
 * int pdos_write(PDOS_FILE *pf, const char *buf, size_t len) – calls pdos_fputc() for as many times as specified and outputs from buffer. Helper method used in testing. In fs.c.
 
+### TESTING 
+
+## test_mkdisk
+* Verifies creation and formatting of a fresh pseudo-disk
+* Calls pdos_mkdisk(true) to create the disk and pdos_mkfs("MYFS2025") to format it.
+* Initializes the superblock with the ID, sets up the inode and data bitmaps, and writes the root inode and root directory block.
+
+## test_inode_alloc
+*   Tests allocation of an inode beyond the root.
+*   Calls inode_allocate() which finds the next available inode.
+*   Updates the inode bitmap to mark a new inode as used.
+
+## test_dir_ops
+*   Tests creation of a new directory entry and lookup.
+*   Allocates an inode, adds a new file using dir_add(), and retrieves it using dir_lookup().
+*   A file1.txt entry is added to the root directory.
+
+## test_persistence
+*   Verifies that the pseudo-disk contents persist across remaps.
+*   Maps disk using pdos_mkdisk(false) and prints directory entries with pdos_dir().
+*   Demonstrates that existing directory structure is intact without reformatting.
+
+## test_write_file1
+*   Tests writing a short message to a file.
+*   Opens file1.txt with pdos_open(), writes data with pdos_write(), and closes it.
+*   Allocates a new data block and updates inode metadata.
+
+## test_read_file1
+*   Verifies reading from a file works correctly.
+*   Opens file1.txt in read mode and reads content with pdos_read().
+*   Validates that data is correctly retrieved from previously written block.
+
+## test_print_files
+*   Prints all filenames in the root directory.
+*   Uses pdos_dir() to retrieve and print directory contents.
+*   Tests directory listing works and filenames are stored correctly.
+
+## test_grow_file1
+*   Tests appending a large amount of data to an existing file.
+*   Opens file1.txt in read+write mode and writes 1024 'X' characters.
+*   Allocates a second data block and updates inode to reflect multiple block usage.
+
+## test_subdir
+*   Tests the creation of a subdirectory.
+*   Runs pdos_mkdir("subdir1") which allocates an inode and adds . and .. entries inside it.
+*   A new directory entry appears in root, and its own block is initialized.
 
 
 ## Remove Shared Memory 
@@ -103,3 +149,13 @@ Supported Operations -- Helper Methods:
 
 ## Look for Shared Memory 
 *   ls -lh /dev/shm/pdosfs
+
+## Inspect 
+*   hexdump -C /dev/shm/pdosfs
+
+## Test Static Library
+*   make clean
+*   make lib/libpdosfs.a
+*   mv src src_hidden
+*   make tests
+*   ./test/for_submission

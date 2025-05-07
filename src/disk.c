@@ -129,6 +129,13 @@ int pdos_mkfs(char *id) {
     iblk.inodes[0].data_blocks[0] = 67;                   // absolute block for root dir
     block_write(3, &iblk);
 
+    // 3.1) other inode blocks (blocks 4 through 66)
+    for (int block = 4; block <= 66; block++) {
+        INODE_BLOCK i_blk = {0};
+        block_write(block, &i_blk);
+    }
+
+
     // 4) root directory block @ absolute 67
     DIR_BLOCK droot = { .num_dir_entries = 2 };
     // "."
