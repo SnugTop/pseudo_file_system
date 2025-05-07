@@ -78,7 +78,7 @@ PDOS_FILE *pdos_open(const char *fname, const char *mode) {
 
 int pdos_fgetc(PDOS_FILE *pf) {
     if (!pf || pf->modeR == 0) {
-        return EOF; // don't want to throw an error just for this
+        return EOF; 
     }
 
     unsigned short ib = pf->inode_block;

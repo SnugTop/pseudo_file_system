@@ -9,11 +9,11 @@ int main(int argc, char **argv) {
     const char *id;
 
     if (argc == 1) {
-        // no argument → use the built-in default
+        // no argument  use the built-in default
         id = DEFAULT_ID;
     }
     else if (argc == 2) {
-        // one argument → use that instead
+        // one argument use that instead
         id = argv[1];
     }
     else {

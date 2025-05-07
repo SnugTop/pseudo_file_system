@@ -26,7 +26,6 @@ int        pdos_read(PDOS_FILE *pf, char *buf, size_t len);
 int        pdos_write(PDOS_FILE *pf, const char *buf, size_t len);
 bool       pdos_exists(const char *fname);
 
-// Now matches spec exactly: void return, single‐arg
 void       pdos_mkdir(char *dirname);
 
-#endif // FS_H
+#endif 

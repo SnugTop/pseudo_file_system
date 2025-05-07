@@ -29,7 +29,7 @@ LIB_SRCS    = \
 
 LIB_OBJS    = $(LIB_SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-# Wrapper (user‐facing) commands
+# Wrapper commands
 WRAPPERS      = pdos_mkdisk pdos_mkfs pdos_dir
 WRAPPER_SRCS  = $(addprefix $(SRC_DIR)/, $(addsuffix .c,$(WRAPPERS)))
 
