@@ -1,9 +1,9 @@
 # Compiler and flags
-CC      = gcc
-CFLAGS  = -std=c11 -Wall -D_POSIX_C_SOURCE=200809L
+CC        = gcc
+CFLAGS    = -std=c11 -Wall -Wextra -pedantic -D_XOPEN_SOURCE=700 -I$(INCLUDE_DIR)
 
-# Detect platform
-UNAME_S := $(shell uname -s)
+# Detect platform for librt
+UNAME_S   := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
     LDFLAGS = -lrt
 else
@@ -13,46 +13,74 @@ endif
 # Directories
 SRC_DIR     = src
 INCLUDE_DIR = include
-TEST_DIR    = test
 BUILD_DIR   = build
 LIB_DIR     = lib
-STATIC_LIB  = $(LIB_DIR)/libpdosfs.a
+TEST_DIR    = test
 
-# Source files
-SRCS = $(SRC_DIR)/disk.c $(SRC_DIR)/inode.c $(SRC_DIR)/dir.c $(SRC_DIR)/fs.c
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+# Static library name (exact casing per spec)
+STATIC_LIB  = $(LIB_DIR)/libPseudoFS.a
 
-# Test programs
-TESTS = test_mkdisk test_inode_alloc test_dir_ops test_persistence \
-        test_write_file1 test_write_file2 test_read_file1 \
-        test_grow_file1 test_grow_file2 test_print_files test_subdir \
-        for_submission
+# Library source files (your core FS implementation)
+LIB_SRCS    = \
+    $(SRC_DIR)/disk.c    \
+    $(SRC_DIR)/inode.c   \
+    $(SRC_DIR)/dir.c     \
+    $(SRC_DIR)/fs.c
 
-# Default target
-all: $(STATIC_LIB) $(addprefix $(TEST_DIR)/, $(TESTS))
+LIB_OBJS    = $(LIB_SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-# Build object files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+# Wrapper (user‐facing) commands
+WRAPPERS      = pdos_mkdisk pdos_mkfs pdos_dir
+WRAPPER_SRCS  = $(addprefix $(SRC_DIR)/, $(addsuffix .c,$(WRAPPERS)))
 
-# Archive static library
-$(STATIC_LIB): $(OBJS)
-	@mkdir -p $(LIB_DIR)
+# Test binaries
+TESTS       = \
+    test_mkdisk        \
+    test_inode_alloc   \
+    test_dir_ops       \
+    test_persistence   \
+    test_write_file1   \
+    test_write_file2   \
+    test_read_file1    \
+    test_grow_file1    \
+    test_grow_file2    \
+    test_print_files   \
+    test_subdir        \
+    for_submission
+
+TEST_PROGS  = $(addprefix $(TEST_DIR)/,$(TESTS))
+
+# Default target builds library, wrappers, and tests
+all: $(STATIC_LIB) $(WRAPPERS) $(TEST_PROGS)
+
+# Build object files from library sources
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Archive static library (with correct name)
+$(STATIC_LIB): $(LIB_OBJS) | $(LIB_DIR)
 	ar rcs $@ $^
 
-# Rule for building test programs using the static lib
+$(LIB_DIR):
+	mkdir -p $(LIB_DIR)
+
+# Build user‐facing wrapper commands
+# Links against libPseudoFS.a and -lrt
+$(WRAPPERS): %: $(SRC_DIR)/%.c $(STATIC_LIB)
+	$(CC) $(CFLAGS) $< -L$(LIB_DIR) -lPseudoFS -o $@ $(LDFLAGS)
+
+# Build test programs (still link against the same library)
 $(TEST_DIR)/%: $(TEST_DIR)/%.c $(STATIC_LIB)
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $< -L$(LIB_DIR) -lpdosfs -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< -L$(LIB_DIR) -lPseudoFS -o $@ $(LDFLAGS)
 
-# Recompile only tests
-tests: $(addprefix $(TEST_DIR)/, $(TESTS))
+# Shortcut to rebuild just tests
+tests: $(TEST_PROGS)
 
-# Clean targets
+# Clean up everything
 clean:
-	rm -rf $(BUILD_DIR) $(LIB_DIR)/libpdosfs.a $(addprefix $(TEST_DIR)/, $(TESTS))
+	rm -rf $(BUILD_DIR) $(LIB_DIR)/libPseudoFS.a $(WRAPPERS) $(TEST_PROGS)
 
-clean_tests:
-	rm -f $(addprefix $(TEST_DIR)/, $(TESTS))
-
-.PHONY: all clean clean_tests tests
+.PHONY: all tests clean
