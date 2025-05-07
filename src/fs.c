@@ -120,6 +120,7 @@ void pdos_fputc(int b, PDOS_FILE *pf) {
     INODE_BLOCK i_block;
     block_read(ib, &i_block);
     INODE_ENTRY *i_entry = &i_block.inodes[ie];
+    i_entry.file_mod_time = time(NULL);
 
     // allocate block if needed
     if (i_entry->data_blocks[pf->data_block_cur] == 0xFFFF) {
@@ -156,6 +157,30 @@ void pdos_fputc(int b, PDOS_FILE *pf) {
 
 void pdos_fclose(PDOS_FILE *pf) {
     if (pf) {
+        if (pf->modeW == 0) { //cannot write buffer
+            free(pf);
+            return;
+        }
+
+        //write out buffer
+
+        //find Inode Block
+        unsigned short ib = pf->inode_block;
+        unsigned short ie = pf->inode_index; 
+        INODE_BLOCK i_block;
+        block_read(ib, &i_block);
+        INODE_ENTRY i_entry = i_block.inodes[ie];
+
+        i_block.inodes[ie].size = sizeof(pf->buffer) / sizeof(char);
+        i_block.inodes[ie].data_blocks_used = 1; //buffer cannot take up more than one block
+
+        int curDataIndex = 0; //where in block
+        DATA_BLOCK d_b;
+        block_read(67+i_entry.data_blocks[0], &d_b); //other blocks may have been allocated; they don't really matter
+        for (int count = 0; count < i_block.inodes[ie].size; count++) {
+            d_b[curDataIndex] = buffer[count]; //replace whatever byte is in there
+        } 
+        
         free(pf); // not deallocating memory blocks, just removing the pointer
     }
 }
@@ -170,6 +195,7 @@ int pdos_mkdir(const char *dirname) {
     INODE_ENTRY i_entry = {0};
     i_entry.size = 2 * sizeof(DIR_ENTRY);
     i_entry.data_blocks_used = 1;
+    i_entry.file_mod_time = time(NULL);
 
     int new_block = data_block_allocate();
     if (new_block < 0) return -1;
