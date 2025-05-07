@@ -17,10 +17,10 @@ BUILD_DIR   = build
 LIB_DIR     = lib
 TEST_DIR    = test
 
-# Static library name (exact casing per spec)
+# Static library name 
 STATIC_LIB  = $(LIB_DIR)/libPseudoFS.a
 
-# Library source files (your core FS implementation)
+# Library source files 
 LIB_SRCS    = \
     $(SRC_DIR)/disk.c    \
     $(SRC_DIR)/inode.c   \
@@ -33,7 +33,7 @@ LIB_OBJS    = $(LIB_SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 WRAPPERS      = pdos_mkdisk pdos_mkfs pdos_dir
 WRAPPER_SRCS  = $(addprefix $(SRC_DIR)/, $(addsuffix .c,$(WRAPPERS)))
 
-# Test binaries
+# Tests
 TESTS       = \
     test_mkdisk        \
     test_inode_alloc   \
@@ -60,14 +60,14 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Archive static library (with correct name)
+# Archive static library 
 $(STATIC_LIB): $(LIB_OBJS) | $(LIB_DIR)
 	ar rcs $@ $^
+	ranlib $@
 
 $(LIB_DIR):
 	mkdir -p $(LIB_DIR)
 
-# Build user‐facing wrapper commands
 # Links against libPseudoFS.a and -lrt
 $(WRAPPERS): %: $(SRC_DIR)/%.c $(STATIC_LIB)
 	$(CC) $(CFLAGS) $< -L$(LIB_DIR) -lPseudoFS -o $@ $(LDFLAGS)
