@@ -50,7 +50,7 @@ int pdos_mkdisk(bool fresh) {
 
 /*
  * block_read / block_write:
- *   Raw 1024-byte block I/O at block_number [0..TOTAL_BLOCKS-1]
+ *   Raw 1024-byte block I/O at block_number
  */
 int block_read(int block_number, void *buffer) {
     if (block_number < 0 || block_number >= TOTAL_BLOCKS) {
