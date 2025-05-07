@@ -130,13 +130,12 @@ int pdos_mkfs(char *id) {
     block_write(3, &iblk);
 
     // 3.1) other inode blocks
-    for (short count = 4; count < 67; count++) {
-        INODE_BLOCK i_blk = {0};
-        i_blk.inodes[0].size = 0;          // no entries
-        i_blk.inodes[0].file_mod_time = time(NULL);
-        i_blk.inodes[0].data_blocks_used = 0; //everything is either 0 or uninitialized
-        block_write(count, &i_blk);
-    }
+// 3.1) other inode blocks (blocks 4 through 66)
+for (int block = 4; block <= 66; block++) {
+    INODE_BLOCK i_blk = {0};
+    block_write(block, &i_blk);
+}
+
 
     // 4) root directory block @ absolute 67
     DIR_BLOCK droot = { .num_dir_entries = 2 };

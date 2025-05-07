@@ -96,10 +96,20 @@ Supported Operations -- Helper Methods:
 
 * int pdos_write(PDOS_FILE *pf, const char *buf, size_t len) – calls pdos_fputc() for as many times as specified and outputs from buffer. Helper method used in testing. In fs.c.
 
-
+# TESTING 
 
 ## Remove Shared Memory 
 *   rm -f /dev/shm/pdosfs
 
 ## Look for Shared Memory 
 *   ls -lh /dev/shm/pdosfs
+
+## Inspect 
+*   hexdump -C /dev/shm/pdosfs
+
+## Test Static Library
+*   make clean
+*   make lib/libpdosfs.a
+*   mv src src_hidden
+*   make tests
+*   ./test/for_submission
