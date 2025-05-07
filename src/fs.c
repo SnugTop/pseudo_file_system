@@ -110,18 +110,18 @@ int pdos_fgetc(PDOS_FILE *pf) {
 }
 
 void pdos_fputc(int b, PDOS_FILE *pf) {
-    if (!pf || pf->modeW == 0) return;
+    if (!pf || !pf->modeW) return;
 
     char c = (char)b;
-
     unsigned short ib = pf->inode_block;
-    unsigned short ie = pf->inode_index; 
+    unsigned short ie = pf->inode_index;
 
+    // Load inode block and entry
     INODE_BLOCK i_block;
     block_read(ib, &i_block);
     INODE_ENTRY *i_entry = &i_block.inodes[ie];
 
-    // allocate block if needed
+    // Allocate a data block if this is the first write in it
     if (i_entry->data_blocks[pf->data_block_cur] == 0xFFFF) {
         int new_block = data_block_allocate();
         if (new_block < 0) return;
@@ -129,28 +129,30 @@ void pdos_fputc(int b, PDOS_FILE *pf) {
         i_entry->data_blocks_used++;
     }
 
+    // Read, modify, and write back the data block
     DATA_BLOCK d_block;
     block_read(i_entry->data_blocks[pf->data_block_cur], &d_block);
-
-    // write byte
     d_block.data[pf->loc_data_in_block] = c;
     block_write(i_entry->data_blocks[pf->data_block_cur], &d_block);
 
-    // update file size
-    int absolute_pos = pf->data_block_cur * 1024 + pf->loc_data_in_block;
+    // Update file size if we went past the old end
+    int absolute_pos = pf->data_block_cur * BLOCK_SIZE + pf->loc_data_in_block;
     if (absolute_pos >= i_entry->size) {
         i_entry->size = absolute_pos + 1;
     }
 
-    // save inode update
+    // Stamp modification time
+    i_entry->file_mod_time = time(NULL);
+
+    // Write the updated inode back to disk
     i_block.inodes[ie] = *i_entry;
     block_write(ib, &i_block);
 
-    // incrementation
-    pf->loc_data_in_block += 1;
-    if (pf->loc_data_in_block == 1024) {
+    // Advance our in‐file cursor
+    pf->loc_data_in_block++;
+    if (pf->loc_data_in_block == BLOCK_SIZE) {
         pf->loc_data_in_block = 0;
-        pf->data_block_cur += 1;
+        pf->data_block_cur++;
     }
 }
 
@@ -160,43 +162,50 @@ void pdos_fclose(PDOS_FILE *pf) {
     }
 }
 
-int pdos_mkdir(const char *dirname) {
-    // looks for first free inode
+void pdos_mkdir(char *dirname) {
+    // 1) allocate an inode
     int loc_file = inode_allocate();
-    if (loc_file < 0) return -1;
+    if (loc_file < 0) {
+        fprintf(stderr, "pdos_mkdir: no free inodes\n");
+        return;
+    }
 
-    dir_add(dirname, loc_file, DIR_TYPE); // new directory added in
+    // 2) add entry in the parent (root) directory
+    dir_add(dirname, loc_file, DIR_TYPE);
 
+    // 3) initialize the new inode
     INODE_ENTRY i_entry = {0};
-    i_entry.size = 2 * sizeof(DIR_ENTRY);
+    i_entry.size             = 2 * sizeof(DIR_ENTRY);  // "." and ".."
+    i_entry.file_mod_time    = time(NULL);
     i_entry.data_blocks_used = 1;
 
+    // 4) allocate its data block
     int new_block = data_block_allocate();
-    if (new_block < 0) return -1;
-
+    if (new_block < 0) {
+        fprintf(stderr, "pdos_mkdir: no free data blocks\n");
+        return;
+    }
     i_entry.data_blocks[0] = new_block;
-    for (int i = 1; i < MAX_DATA_BLOCKS; ++i)
+    for (int i = 1; i < MAX_DATA_BLOCKS; ++i) {
         i_entry.data_blocks[i] = 0xFFFF;
+    }
 
+    // 5) write the inode to disk
     inode_write(loc_file, &i_entry);
 
-    // Create . and .. entries
-    DIR_BLOCK root_dir;
-    memset(&root_dir, 0, sizeof(DIR_BLOCK));
-    root_dir.num_dir_entries = 2;
+    // 6) build its "." and ".." directory block
+    DIR_BLOCK dirblk = { .num_dir_entries = 2 };
+    // "."
+    strcpy(dirblk.dir_entries[0].d_name, ".");
+    dirblk.dir_entries[0].d_ino  = loc_file;
+    dirblk.dir_entries[0].d_type = DIR_TYPE;
+    // ".."
+    strcpy(dirblk.dir_entries[1].d_name, "..");
+    dirblk.dir_entries[1].d_ino  = 0;  // parent is root inode 0
+    dirblk.dir_entries[1].d_type = DIR_TYPE;
 
-    strcpy(root_dir.dir_entries[0].d_name, ".");
-    root_dir.dir_entries[0].d_ino = loc_file;
-    root_dir.dir_entries[0].d_type = DIR_TYPE;
-
-    strcpy(root_dir.dir_entries[1].d_name, "..");
-    root_dir.dir_entries[1].d_ino = 0;
-    root_dir.dir_entries[1].d_type = DIR_TYPE;
-
-    block_write(new_block, &root_dir);
-    return 0;
+    block_write(new_block, &dirblk);
 }
-
 int pdos_read(PDOS_FILE *pf, char *buf, size_t len) {
     if (!pf || !pf->modeR) return -1;
 
