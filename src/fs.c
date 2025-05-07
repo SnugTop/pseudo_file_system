@@ -174,11 +174,10 @@ void pdos_fclose(PDOS_FILE *pf) {
         i_block.inodes[ie].size = sizeof(pf->buffer) / sizeof(char);
         i_block.inodes[ie].data_blocks_used = 1; //buffer cannot take up more than one block
 
-        int curDataIndex = 0; //where in block
         DATA_BLOCK d_b;
-        block_read(67+i_entry.data_blocks[0], &d_b); //other blocks may have been allocated; they don't really matter
+        block_read(i_entry.data_blocks[0], &d_b); //other blocks may have been allocated; they don't really matter
         for (int count = 0; count < i_block.inodes[ie].size; count++) {
-            d_b[curDataIndex] = buffer[count]; //replace whatever byte is in there
+            d_b.data[count] = pf->buffer[count]; //replace whatever byte is in there
         } 
         
         free(pf); // not deallocating memory blocks, just removing the pointer
