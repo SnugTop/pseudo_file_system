@@ -1,5 +1,5 @@
-The grade that we anticipate we would get for this assignment is an A-. This is because we spent an incredibly large amount of time on this project
-going through each aspect of the instructions to ensure we met the request of the assignment to the best of our abilities. We are confident that 
-we were very thorough. We may have missed a couple things or could have been more efficient but we believe that our program executes all
-of the required functions and passed the many tests that we created for it. It is definitely not perfect, but we believe that we did do a good job 
-on this assignment.
+The grade that we anticipate we would get for this assignment is at least an A-. This is because we spent an incredibly large amount of time on this 
+project going through each aspect of the instructions to ensure we met the request of the assignment to the best of our abilities. We are confident that 
+we were very thorough, and we often revisited already-written code to ensure it had full functionality. We may have missed a couple things or could have 
+been more efficient. Nonetheless, our program executes all of the required functions with their properly functionality and passed the many tests that we 
+created for it, such as those in the small programs lettered a through i. While some minor errors are likely present, we believe they are inconsequential.
