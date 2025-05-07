@@ -3,6 +3,7 @@
 #define DIR_H
 
 #include "defs.h"
+#include <stddef.h>
 
 #define MAX_NAME_LENGTH 12
 
@@ -15,7 +16,9 @@ typedef struct {
     char padding[13];
 } DIR_ENTRY; //size 51 bytes
 
-#define MAX_DIR_ENTRIES (BLOCK_SIZE / sizeof(DIR_ENTRY))
+enum { 
+    MAX_DIR_ENTRIES = (int)(BLOCK_SIZE / sizeof(DIR_ENTRY))
+};
 
 typedef struct {
     int num_dir_entries; //size 4 bytes
